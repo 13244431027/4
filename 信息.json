@@ -7,5 +7,15 @@
     "tags": ["github镜像"],
     "fileUrl": "https://raw.githubusercontent.com/13244431027/3/main/me/github/GIThubV4.js",
     "uploadTime": "2026.3.7"
+  },
+  {
+    "id": "002",
+    "name": "白猫的markdown",
+    "desc": "支持部分markdown解析",
+    "authors": [{"name": "白猫", "url": "https://www.ccw.site/student/6173f57f48cf8f4796fc860e"},{"name": "yuan", "url": "https://www.ccw.site/student/687f6ba9fc898317568cdc8d"}],
+    "tags": ["markdown"],
+    "fileUrl": "https://raw.githubusercontent.com/13244431027/3/refs/heads/main/me/markdown/markdown.js",
+    "docUrl": "https://learn.ccw.site/article/96ade444-d0e9-4066-8541-eb17d3257f14",
+    "uploadTime": "2026.3.7"
   }
 ]
