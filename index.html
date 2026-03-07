@@ -6,6 +6,8 @@
     <title>资源列表</title>
     <style>
         body { font-family: sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .search-box { margin-bottom: 20px; text-align: center; }
+        .search-box input { padding: 10px; width: 60%; max-width: 400px; border: 1px solid #ddd; border-radius: 4px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         .card { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
         .card img { width: 100%; height: 160px; object-fit: cover; border-radius: 4px; background: #eee; }
@@ -14,57 +16,82 @@
         .tags span { background: #e0f0ff; color: #0066cc; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-right: 5px; }
         .authors { margin: 10px 0; font-size: 0.85em; }
         .authors a { color: #555; text-decoration: none; margin-right: 8px; }
-        .links { display: flex; gap: 10px; margin-top: 10px; }
-        .links a { flex: 1; text-align: center; padding: 5px; background: #333; color: #fff; text-decoration: none; border-radius: 4px; font-size: 0.8em; }
+        .links { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .links a { flex: 1; min-width: 60px; text-align: center; padding: 5px; background: #333; color: #fff; text-decoration: none; border-radius: 4px; font-size: 0.8em; }
         .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 30px; }
         .pagination button { padding: 8px 16px; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 4px; }
         .pagination button.active { background: #333; color: #fff; border-color: #333; }
         .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="搜索名称、介绍、标签、作者..." oninput="handleSearch()">
+    </div>
     <div id="app" class="grid"></div>
     <div id="pagination" class="pagination"></div>
 
     <script>
         const ITEMS_PER_PAGE = 20;
         let allData = [];
+        let displayData = [];
         let currentPage = 1;
 
         async function init() {
             try {
                 const res = await fetch('信息.json');
                 allData = await res.json();
+                displayData = allData;
                 renderPage(1);
             } catch (e) {
-                document.getElementById('app').innerHTML = '<p>加载失败，请检查.json 文件或 CORS 设置。</p>';
-                console.error(e);
+                document.getElementById('app').innerHTML = '<p>加载失败</p>';
             }
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            displayData = allData.filter(item => 
+                item.name.toLowerCase().includes(query) ||
+                item.desc.toLowerCase().includes(query) ||
+                item.tags.some(t => t.toLowerCase().includes(query)) ||
+                item.authors.some(a => a.name.toLowerCase().includes(query))
+            );
+            currentPage = 1;
+            renderPage(1);
         }
 
         function renderPage(page) {
             currentPage = page;
             const start = (page - 1) * ITEMS_PER_PAGE;
-            const end = start + ITEMS_PER_PAGE;
-            const data = allData.slice(start, end);
-            const total = Math.ceil(allData.length / ITEMS_PER_PAGE);
+            const data = displayData.slice(start, start + ITEMS_PER_PAGE);
+            const total = Math.ceil(displayData.length / ITEMS_PER_PAGE);
             const container = document.getElementById('app');
             
-            container.innerHTML = data.map(item => `
+            if (data.length === 0) {
+                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">无匹配结果</p>';
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = data.map(item => {
+                const links = [];
+                if(item.fileUrl) links.push(`<a href="${item.fileUrl}" target="_blank">文件</a>`);
+                if(item.docUrl) links.push(`<a href="${item.docUrl}" target="_blank">文档 1</a>`);
+                if(item.docUrl2) links.push(`<a href="${item.docUrl2}" target="_blank">文档 2</a>`);
+                if(item.exampleUrl) links.push(`<a href="${item.exampleUrl}" target="_blank">示例</a>`);
+
+                return `
                 <div class="card">
-                    <img src="封面/${item.id}.png" alt="${item.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMTAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGVlIi8+PC9zdmc+'">
+                    <img src="封面/${item.id}.png" alt="${item.name}" onerror="this.style.display='none'">
                     <h3>${item.name}</h3>
                     <p>${item.desc}</p>
                     <div class="tags">${item.tags.map(t => `<span>#${t}</span>`).join('')}</div>
                     <div class="authors">作者：${item.authors.map(a => `<a href="${a.url}" target="_blank">${a.name}</a>`).join(' ')}</div>
-                    <div class="links">
-                        <a href="${item.fileUrl}" target="_blank">文件</a>
-                        <a href="${item.docUrl}" target="_blank">文档</a>
-                        <a href="${item.exampleUrl}" target="_blank">示例</a>
-                    </div>
+                    <div class="links">${links.join('')}</div>
                     <div style="font-size:0.7em;color:#999;margin-top:5px;">${item.uploadTime}</div>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
 
             renderPagination(total);
         }
@@ -74,6 +101,7 @@
             if (total <= 1) { container.innerHTML = ''; return; }
             
             let html = `<button onclick="renderPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
+            // 简化分页显示逻辑
             for (let i = 1; i <= total; i++) {
                 if (i === 1 || i === total || (i >= currentPage - 1 && i <= currentPage + 1)) {
                     html += `<button onclick="renderPage(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
@@ -89,3 +117,4 @@
     </script>
 </body>
 </html>
+
