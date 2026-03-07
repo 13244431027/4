@@ -49,7 +49,7 @@
                 allData = await res.json();
                 applyFiltersAndSort();
             } catch (e) {
-                document.getElementById('app').innerHTML = '<p>加载失败</p>';
+                document.getElementById('app').innerHTML = '<p>加载失败，请检查文件路径。</p>';
             }
         }
 
@@ -67,7 +67,6 @@
         function applyFiltersAndSort() {
             const query = document.getElementById('searchInput').value.toLowerCase().trim();
             
-            // 1. Filter
             displayData = allData.filter(item => 
                 item.name.toLowerCase().includes(query) ||
                 item.desc.toLowerCase().includes(query) ||
@@ -75,7 +74,6 @@
                 item.authors.some(a => a.name.toLowerCase().includes(query))
             );
 
-            // 2. Sort
             displayData.sort((a, b) => {
                 const timeA = new Date(a.uploadTime).getTime();
                 const timeB = new Date(b.uploadTime).getTime();
@@ -105,9 +103,12 @@
                 if(item.docUrl2) links.push(`<a href="${item.docUrl2}" target="_blank">文档 2</a>`);
                 if(item.exampleUrl) links.push(`<a href="${item.exampleUrl}" target="_blank">示例</a>`);
 
+                // 支持 png, jpg, svg, gif
+                const coverSrc = item.cover ? `封面/${item.cover}` : ''; 
+
                 return `
                 <div class="card">
-                    <img src="封面/${item.id}.png" alt="${item.name}" onerror="this.style.display='none'">
+                    ${coverSrc ? `<img src="${coverSrc}" alt="${item.name}" onerror="this.style.display='none'">` : ''}
                     <h3>${item.name}</h3>
                     <p>${item.desc}</p>
                     <div class="tags">${item.tags.map(t => `<span>#${t}</span>`).join('')}</div>
