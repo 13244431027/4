@@ -49,7 +49,7 @@
                 allData = await res.json();
                 applyFiltersAndSort();
             } catch (e) {
-                document.getElementById('app').innerHTML = '<p>加载失败，请检查文件路径。</p>';
+                document.getElementById('app').innerHTML = '<p>加载失败，请检查.json 文件或 CORS 设置。</p>';
             }
         }
 
@@ -97,18 +97,17 @@
             }
 
             container.innerHTML = data.map(item => {
+                // 兼容旧版：若无 image 字段，默认使用 id.png
+                const imgSrc = item.image ? `封面/${item.image}` : `封面/${item.id}.png`;
                 const links = [];
                 if(item.fileUrl) links.push(`<a href="${item.fileUrl}" target="_blank">文件</a>`);
                 if(item.docUrl) links.push(`<a href="${item.docUrl}" target="_blank">文档 1</a>`);
                 if(item.docUrl2) links.push(`<a href="${item.docUrl2}" target="_blank">文档 2</a>`);
                 if(item.exampleUrl) links.push(`<a href="${item.exampleUrl}" target="_blank">示例</a>`);
 
-                // 支持 png, jpg, svg, gif
-                const coverSrc = item.cover ? `封面/${item.cover}` : ''; 
-
                 return `
                 <div class="card">
-                    ${coverSrc ? `<img src="${coverSrc}" alt="${item.name}" onerror="this.style.display='none'">` : ''}
+                    <img src="${imgSrc}" alt="${item.name}" onerror="this.style.display='none'">
                     <h3>${item.name}</h3>
                     <p>${item.desc}</p>
                     <div class="tags">${item.tags.map(t => `<span>#${t}</span>`).join('')}</div>
