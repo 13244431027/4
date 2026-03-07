@@ -1,6 +1,6 @@
 [
   {
-    "id": "1001",
+    "id": "001",
     "name": "项目示例 A",
     "description": "这是一个测试项目的简介。",
     "authors": [{"name": "张三", "url": "https://github.com/zhangsan"}, {"name": "李四", "url": "https://github.com/lisi"}],
