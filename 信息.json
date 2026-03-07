@@ -1,13 +1,11 @@
 [
   {
     "id": "001",
-    "name": "项目示例 A",
-    "desc": "这是一个测试项目介绍。",
-    "authors": [{"name": "张三", "url": "https://github.com/zs"}, {"name": "李四", "url": "https://github.com/ls"}],
-    "tags": ["HTML", "CSS"],
-    "fileUrl": "#",
-    "docUrl": "#",
-    "exampleUrl": "#",
-    "uploadTime": "2023-10-01"
+    "name": "github镜像",
+    "desc": "bug较多，见谅",
+    "authors": [{"name": "yuan", "url": "https://www.ccw.site/student/687f6ba9fc898317568cdc8d"}],
+    "tags": ["github镜像"],
+    "fileUrl": "https://raw.githubusercontent.com/13244431027/3/main/me/github/GIThubV4.js",
+    "uploadTime": "2026.3.7"
   }
 ]
