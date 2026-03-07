@@ -3,24 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>项目展示</title>
+    <title>资源列表</title>
     <style>
         body { font-family: sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         .card { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
         .card img { width: 100%; height: 160px; object-fit: cover; border-radius: 4px; background: #eee; }
-        .card h3 { margin: 10px 0 5px; font-size: 1.2rem; }
-        .card p { color: #666; font-size: 0.9rem; flex-grow: 1; }
-        .tags { margin: 10px 0; }
-        .tag { background: #e0e0e0; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; margin-right: 5px; }
-        .authors { font-size: 0.85rem; margin-bottom: 10px; }
-        .authors a { color: #0366d6; text-decoration: none; margin-right: 5px; }
-        .links { display: flex; gap: 10px; margin-top: auto; }
-        .btn { flex: 1; padding: 8px; text-align: center; background: #0366d6; color: #fff; text-decoration: none; border-radius: 4px; font-size: 0.9rem; }
+        .card h3 { margin: 10px 0 5px; font-size: 1.1em; }
+        .card p { font-size: 0.9em; color: #666; flex-grow: 1; }
+        .tags span { background: #e0f0ff; color: #0066cc; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-right: 5px; }
+        .authors { margin: 10px 0; font-size: 0.85em; }
+        .authors a { color: #555; text-decoration: none; margin-right: 8px; }
+        .links { display: flex; gap: 10px; margin-top: 10px; }
+        .links a { flex: 1; text-align: center; padding: 5px; background: #333; color: #fff; text-decoration: none; border-radius: 4px; font-size: 0.8em; }
         .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 30px; }
-        .page-btn { padding: 8px 16px; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 4px; }
-        .page-btn.active { background: #0366d6; color: #fff; border-color: #0366d6; }
-        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .pagination button { padding: 8px 16px; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 4px; }
+        .pagination button.active { background: #333; color: #fff; border-color: #333; }
+        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -38,54 +37,51 @@
                 allData = await res.json();
                 renderPage(1);
             } catch (e) {
-                document.getElementById('app').innerHTML = '<p>加载数据失败，请检查信息.json 路径。</p>';
+                document.getElementById('app').innerHTML = '<p>加载失败，请检查.json 文件或 CORS 设置。</p>';
+                console.error(e);
             }
         }
 
         function renderPage(page) {
             currentPage = page;
             const start = (page - 1) * ITEMS_PER_PAGE;
-            const data = allData.slice(start, start + ITEMS_PER_PAGE);
+            const end = start + ITEMS_PER_PAGE;
+            const data = allData.slice(start, end);
+            const total = Math.ceil(allData.length / ITEMS_PER_PAGE);
             const container = document.getElementById('app');
             
             container.innerHTML = data.map(item => `
                 <div class="card">
-                    <img src="封面/${item.id}.png" alt="${item.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyODAiIGhlaWdodD0iMTYwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGVkZWRlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5OTkiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg=='">
+                    <img src="封面/${item.id}.png" alt="${item.name}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMTAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGVlIi8+PC9zdmc+'">
                     <h3>${item.name}</h3>
-                    <div class="authors">
-                        ${item.authors.map(a => `<a href="${a.url}" target="_blank">@${a.name}</a>`).join(' ')}
-                    </div>
-                    <p>${item.description}</p>
-                    <div class="tags">${item.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+                    <p>${item.desc}</p>
+                    <div class="tags">${item.tags.map(t => `<span>#${t}</span>`).join('')}</div>
+                    <div class="authors">作者：${item.authors.map(a => `<a href="${a.url}" target="_blank">${a.name}</a>`).join(' ')}</div>
                     <div class="links">
-                        <a class="btn" href="${item.fileUrl}" target="_blank">文件</a>
-                        <a class="btn" href="${item.docUrl}" target="_blank">文档</a>
-                        <a class="btn" href="${item.exampleUrl}" target="_blank">示例</a>
+                        <a href="${item.fileUrl}" target="_blank">文件</a>
+                        <a href="${item.docUrl}" target="_blank">文档</a>
+                        <a href="${item.exampleUrl}" target="_blank">示例</a>
                     </div>
-                    <div style="font-size:0.8rem;color:#999;margin-top:10px;">${item.uploadTime}</div>
+                    <div style="font-size:0.7em;color:#999;margin-top:5px;">${item.uploadTime}</div>
                 </div>
             `).join('');
 
-            renderPagination();
-            window.scrollTo(0, 0);
+            renderPagination(total);
         }
 
-        function renderPagination() {
-            const totalPages = Math.ceil(allData.length / ITEMS_PER_PAGE);
+        function renderPagination(total) {
             const container = document.getElementById('pagination');
-            let html = '';
+            if (total <= 1) { container.innerHTML = ''; return; }
             
-            html += `<button class="page-btn" onclick="renderPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
-            
-            for (let i = 1; i <= totalPages; i++) {
-                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-                    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="renderPage(${i})">${i}</button>`;
-                } else if (i === currentPage - 3 || i === currentPage + 3) {
+            let html = `<button onclick="renderPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
+            for (let i = 1; i <= total; i++) {
+                if (i === 1 || i === total || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    html += `<button onclick="renderPage(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
                     html += `<span>...</span>`;
                 }
             }
-
-            html += `<button class="page-btn" onclick="renderPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>`;
+            html += `<button onclick="renderPage(${currentPage + 1})" ${currentPage === total ? 'disabled' : ''}>下一页</button>`;
             container.innerHTML = html;
         }
 
