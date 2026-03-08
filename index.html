@@ -7,8 +7,10 @@
     <style>
         body { font-family: sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
         .controls { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
-        .controls input, .controls select { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        .controls input, .controls select, .controls button { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
         .controls input { width: 60%; max-width: 400px; }
+        .controls button { cursor: pointer; background: #fff; transition: 0.2s; }
+        .controls button.active { background: #0066cc; color: #fff; border-color: #0066cc; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         .card { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
         .card img { width: 100%; height: 160px; object-fit: cover; border-radius: 4px; background: #eee; }
@@ -28,10 +30,11 @@
 <body>
     <div class="controls">
         <input type="text" id="searchInput" placeholder="搜索名称、介绍、标签、作者..." oninput="handleSearch()">
-        <select id="sortSelect" onchange="handleSort()">
+        <select id="sortSelect" onchange="handleSort()" ${isExploreMode ? 'disabled' : ''}>
             <option value="newest">最新上传</option>
             <option value="oldest">最旧上传</option>
         </select>
+        <button id="exploreBtn" onclick="toggleExplore()">🔍 探索模式</button>
     </div>
     <div id="app" class="grid"></div>
     <div id="pagination" class="pagination"></div>
@@ -42,6 +45,7 @@
         let displayData = [];
         let currentPage = 1;
         let currentSort = 'newest';
+        let isExploreMode = false;
 
         async function init() {
             try {
@@ -49,8 +53,26 @@
                 allData = await res.json();
                 applyFiltersAndSort();
             } catch (e) {
-                document.getElementById('app').innerHTML = '<p>加载失败，请检查.json 文件或 CORS 设置。</p>';
+                document.getElementById('app').innerHTML = '<p>加载失败</p>';
             }
+        }
+
+        function toggleExplore() {
+            isExploreMode = !isExploreMode;
+            const btn = document.getElementById('exploreBtn');
+            const sortSelect = document.getElementById('sortSelect');
+            
+            if (isExploreMode) {
+                btn.classList.add('active');
+                btn.innerText = '✅ 探索中';
+                sortSelect.disabled = true;
+            } else {
+                btn.classList.remove('active');
+                btn.innerText = '🔍 探索模式';
+                sortSelect.disabled = false;
+            }
+            currentPage = 1;
+            applyFiltersAndSort();
         }
 
         function handleSearch() {
@@ -59,9 +81,18 @@
         }
 
         function handleSort() {
+            if (isExploreMode) return;
             currentSort = document.getElementById('sortSelect').value;
             currentPage = 1;
             applyFiltersAndSort();
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
         }
 
         function applyFiltersAndSort() {
@@ -74,11 +105,15 @@
                 item.authors.some(a => a.name.toLowerCase().includes(query))
             );
 
-            displayData.sort((a, b) => {
-                const timeA = new Date(a.uploadTime).getTime();
-                const timeB = new Date(b.uploadTime).getTime();
-                return currentSort === 'newest' ? timeB - timeA : timeA - timeB;
-            });
+            if (isExploreMode) {
+                shuffle(displayData);
+            } else {
+                displayData.sort((a, b) => {
+                    const timeA = new Date(a.uploadTime).getTime();
+                    const timeB = new Date(b.uploadTime).getTime();
+                    return currentSort === 'newest' ? timeB - timeA : timeA - timeB;
+                });
+            }
 
             renderPage(1);
         }
@@ -97,7 +132,6 @@
             }
 
             container.innerHTML = data.map(item => {
-                // 兼容旧版：若无 image 字段，默认使用 id.png
                 const imgSrc = item.image ? `封面/${item.image}` : `封面/${item.id}.png`;
                 const links = [];
                 if(item.fileUrl) links.push(`<a href="${item.fileUrl}" target="_blank">文件</a>`);
