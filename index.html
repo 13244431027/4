@@ -3,188 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="静态资源展示页面">
     <title>资源列表</title>
     <style>
-        body { font-family: sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
-        header { margin-bottom: 20px; }
-        .controls { display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; }
-        .controls input, .controls select, .controls button { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        .controls input { width: 60%; max-width: 400px; }
-        .controls button { cursor: pointer; background: #fff; transition: 0.2s; }
-        .controls button.active { background: #0066cc; color: #fff; border-color: #0066cc; }
-        .tags-cloud { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px; }
-        .tags-cloud button { padding: 4px 12px; border: 1px solid #ccc; background: #fff; border-radius: 20px; font-size: 0.85em; cursor: pointer; transition: 0.2s; }
-        .tags-cloud button.selected { background: #999; color: #fff; border-color: #999; }
-        .stats { text-align: center; color: #666; font-size: 0.9em; margin-bottom: 15px; }
+        :root { --primary: #0066cc; --bg: #f5f5f5; --card-bg: #fff; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: var(--bg); color: #333; }
+        
+        /* 控制区 */
+        .controls { display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; align-items: center; }
+        .controls input, .controls select, .controls button { padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        .controls input { width: 100%; max-width: 400px; }
+        .controls button { cursor: pointer; background: #fff; transition: all 0.2s; }
+        .controls button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .stats { width: 100%; text-align: center; font-size: 0.9em; color: #666; margin-bottom: 10px; }
+
+        /* 标签云 */
+        .tags-cloud { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 20px; max-height: 100px; overflow-y: auto; padding: 10px; background: #eee; border-radius: 8px; }
+        .tag-item { padding: 4px 10px; background: #fff; border: 1px solid #ddd; border-radius: 20px; font-size: 0.85em; cursor: pointer; user-select: none; transition: 0.2s; }
+        .tag-item:hover { border-color: var(--primary); color: var(--primary); }
+        .tag-item.selected { background: #666; color: #fff; border-color: #666; }
+
+        /* 网格与卡片 */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        article.card { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; }
-        .card img { width: 100%; height: 160px; object-fit: cover; border-radius: 4px; background: #eee; cursor: zoom-in; }
-        .card h3 { margin: 10px 0 5px; font-size: 1.1em; }
-        .card p { font-size: 0.9em; color: #666; flex-grow: 1; }
-        .tags span { background: #e0f0ff; color: #0066cc; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-right: 5px; }
-        .authors { margin: 10px 0; font-size: 0.85em; }
-        .authors a { color: #555; text-decoration: none; margin-right: 8px; }
-        .links { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
-        .links a { flex: 1; min-width: 60px; text-align: center; padding: 5px; background: #333; color: #fff; text-decoration: none; border-radius: 4px; font-size: 0.8em; }
-        .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 1.1em; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-        .copy-btn:hover { background: #eee; }
-        .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 30px; }
-        .pagination button { padding: 8px 16px; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 4px; }
+        .card { background: var(--card-bg); padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; transition: transform 0.2s; }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
+        
+        .card-img-wrap { position: relative; width: 100%; height: 160px; background: #eee; border-radius: 4px; overflow: hidden; cursor: zoom-in; }
+        .card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        
+        .copy-btn { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 4px; width: 28px; height: 28px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.2s; }
+        .card-img-wrap:hover .copy-btn { opacity: 1; }
+        .copy-btn:active { background: var(--primary); }
+
+        .card h3 { margin: 12px 0 5px; font-size: 1.1em; }
+        .card p { font-size: 0.9em; color: #666; flex-grow: 1; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .card-tags { margin-bottom: 8px; }
+        .card-tags span { background: #e0f0ff; color: var(--primary); padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-right: 4px; }
+        .authors { font-size: 0.85em; color: #555; margin-bottom: 10px; }
+        .authors a { color: #555; text-decoration: none; border-bottom: 1px dotted #999; }
+        .links { display: flex; gap: 8px; flex-wrap: wrap; }
+        .links a { flex: 1; min-width: 60px; text-align: center; padding: 6px; background: #333; color: #fff; text-decoration: none; border-radius: 4px; font-size: 0.8em; }
+        .links a:hover { background: #555; }
+
+        /* 分页 */
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 30px; flex-wrap: wrap; }
+        .pagination button { padding: 8px 14px; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 4px; }
         .pagination button.active { background: #333; color: #fff; border-color: #333; }
         .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
-        /* 图片预览 Modal */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
-        .modal.active { display: flex; }
-        .modal img { max-width: 90%; max-height: 90%; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-        .modal-close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 2em; cursor: pointer; }
+
+        /* 灯箱 (全屏预览) */
+        .lightbox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        .lightbox.active { display: flex; }
+        .lightbox img { max-width: 90%; max-height: 90vh; object-fit: contain; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .lightbox-close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px; cursor: pointer; }
+        .lightbox-caption { color: #fff; margin-top: 15px; font-size: 1.1em; }
     </style>
 </head>
 <body>
-    <header>
-        <div class="controls">
-            <input type="text" id="searchInput" placeholder="搜索名称/介绍/标签/作者...">
-            <select id="sortSelect">
-                <option value="newest">最新上传</option>
-                <option value="oldest">最旧上传</option>
-            </select>
-            <button id="exploreBtn">🔍 探索模式</button>
-        </div>
-        <div id="tagsCloud" class="tags-cloud"></div>
-        <div id="stats" class="stats">共找到 0 个资源</div>
-    </header>
 
-    <main id="app" class="grid"></main>
+    <!-- 控制栏 -->
+    <div class="controls">
+        <input type="text" id="searchInput" placeholder="搜索名称、介绍、作者..." oninput="handleStateChange()">
+        <select id="sortSelect" onchange="handleStateChange()">
+            <option value="newest">最新上传</option>
+            <option value="oldest">最旧上传</option>
+        </select>
+        <button id="exploreBtn" onclick="toggleExplore()">🔍 探索模式</button>
+    </div>
+
+    <!-- 统计 -->
+    <div class="stats" id="statsText">加载中...</div>
+
+    <!-- 标签云 -->
+    <div class="tags-cloud" id="tagsCloud"></div>
+
+    <!-- 内容网格 -->
+    <div id="app" class="grid"></div>
+    
+    <!-- 分页 -->
     <div id="pagination" class="pagination"></div>
 
-    <!-- 图片预览 Modal -->
-    <div id="imageModal" class="modal" onclick="this.classList.remove('active')">
-        <span class="modal-close">&times;</span>
-        <img id="modalImg" src="" alt="预览">
+    <!-- 全屏预览灯箱 -->
+    <div id="lightbox" class="lightbox" onclick="closeLightbox(event)">
+        <span class="lightbox-close">&times;</span>
+        <img id="lightboxImg" src="" alt="Preview">
+        <div id="lightboxCaption" class="lightbox-caption"></div>
     </div>
 
     <script>
         const ITEMS_PER_PAGE = 20;
-        let allData = [], displayData = [], availableTags = [];
-        let currentPage = 1, currentSort = 'newest', isExploreMode = false, selectedTags = new Set();
+        let allData = [];
+        let displayData = [];
+        let currentPage = 1;
+        let currentSort = 'newest';
+        let isExploreMode = false;
+        let selectedTags = new Set();
+        let allTags = new Set();
 
+        // 初始化
         async function init() {
             try {
                 const res = await fetch('信息.json');
                 allData = await res.json();
-                // 提取标签云
-                availableTags = [...new Set(allData.flatMap(item => item.tags))];
+                
+                // 提取所有标签
+                allData.forEach(item => {
+                    if(item.tags) item.tags.forEach(t => allTags.add(t));
+                });
                 renderTagsCloud();
-                // 读取 URL 参数恢复状态
-                restoreFromURL();
+                
+                // 从 URL 恢复状态
+                restoreStateFromURL();
+                
                 applyFiltersAndSort();
-                // 绑定事件
-                bindEvents();
             } catch (e) {
-                document.getElementById('app').innerHTML = '<p>加载失败，请检查.json 文件或 CORS 设置。</p>';
+                document.getElementById('app').innerHTML = '<p style="grid-column:1/-1;text-align:center;color:red">加载失败：请检查 信息.json 是否存在且格式正确。</p>';
+                console.error(e);
             }
         }
 
-        function bindEvents() {
-            document.getElementById('searchInput').addEventListener('input', () => { currentPage = 1; applyFiltersAndSort(); });
-            document.getElementById('sortSelect').addEventListener('change', (e) => { currentSort = e.target.value; currentPage = 1; applyFiltersAndSort(); });
-            document.getElementById('exploreBtn').addEventListener('click', toggleExplore);
-            // 图片预览
-            document.getElementById('imageModal').addEventListener('click', (e) => { if(e.target.tagName !== 'IMG') e.currentTarget.classList.remove('active'); });
-            document.addEventListener('keydown', (e) => { if(e.key === 'Escape') document.getElementById('imageModal').classList.remove('active'); });
-        }
-
+        // 渲染标签云
         function renderTagsCloud() {
             const container = document.getElementById('tagsCloud');
-            container.innerHTML = availableTags.map(tag => 
-                `<button data-tag="${tag}" onclick="toggleTag('${tag}')">${tag}</button>`
-            ).join('');
+            const sortedTags = Array.from(allTags).sort();
+            container.innerHTML = sortedTags.map(tag => `
+                <div class="tag-item ${selectedTags.has(tag) ? 'selected' : ''}" 
+                     onclick="toggleTag('${tag}')">
+                     #${tag}
+                </div>
+            `).join('');
         }
 
+        // 切换标签选中状态
         function toggleTag(tag) {
-            selectedTags.has(tag) ? selectedTags.delete(tag) : selectedTags.add(tag);
-            // 更新 UI
-            document.querySelectorAll(`.tags-cloud button[data-tag="${tag}"]`).forEach(btn => btn.classList.toggle('selected'));
-            currentPage = 1;
+            if (selectedTags.has(tag)) {
+                selectedTags.delete(tag);
+            } else {
+                selectedTags.add(tag);
+            }
+            currentPage = 1; // 重置页码
+            updateURL();
             applyFiltersAndSort();
+            renderTagsCloud(); // 重绘标签云以更新样式
         }
 
+        // 切换探索模式
         function toggleExplore() {
             isExploreMode = !isExploreMode;
             const btn = document.getElementById('exploreBtn');
             const sortSelect = document.getElementById('sortSelect');
+            
             btn.classList.toggle('active', isExploreMode);
-            btn.textContent = isExploreMode ? '✅ 探索中' : '🔍 探索模式';
+            btn.innerText = isExploreMode ? '✅ 探索中' : '🔍 探索模式';
             sortSelect.disabled = isExploreMode;
+            
             currentPage = 1;
+            updateURL();
             applyFiltersAndSort();
         }
 
-        function shuffle(arr) {
-            for (let i = arr.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]];
-            }
-            return arr;
+        // 统一状态变更处理 (搜索、排序)
+        function handleStateChange() {
+            currentSort = document.getElementById('sortSelect').value;
+            currentPage = 1;
+            updateURL();
+            applyFiltersAndSort();
         }
 
+        // 核心过滤与排序逻辑
         function applyFiltersAndSort() {
             const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            
+
+            // 1. 过滤 (搜索 + 标签)
             displayData = allData.filter(item => {
-                const matchText = item.name.toLowerCase().includes(query) || item.desc.toLowerCase().includes(query) || 
-                                 item.tags.some(t => t.toLowerCase().includes(query)) || item.authors.some(a => a.name.toLowerCase().includes(query));
-                const matchTags = selectedTags.size === 0 || [...selectedTags].every(t => item.tags.includes(t));
+                // 文本搜索
+                const matchText = 
+                    item.name.toLowerCase().includes(query) ||
+                    item.desc.toLowerCase().includes(query) ||
+                    item.authors.some(a => a.name.toLowerCase().includes(query));
+                
+                // 标签匹配 (如果选了标签，必须包含所有选中的标签)
+                const matchTags = selectedTags.size === 0 || 
+                                  Array.from(selectedTags).every(t => item.tags && item.tags.includes(t));
+
                 return matchText && matchTags;
             });
 
-            if (isExploreMode) shuffle(displayData);
-            else displayData.sort((a, b) => {
-                const tA = new Date(a.uploadTime).getTime(), tB = new Date(b.uploadTime).getTime();
-                return currentSort === 'newest' ? tB - tA : tA - tB;
-            });
-
-            updateStats();
-            updateMeta();
-            updateURL();
-            renderPage(1);
-        }
-
-        function updateStats() {
-            document.getElementById('stats').textContent = `共找到 ${displayData.length} 个资源`;
-        }
-
-        function updateMeta() {
-            const q = document.getElementById('searchInput').value;
-            document.title = q ? `搜索: ${q} - 资源列表` : '资源列表';
-            document.querySelector('meta[name="description"]').content = `浏览 ${displayData.length} 个静态资源项目`;
-        }
-
-        function updateURL() {
-            const params = new URLSearchParams();
-            const q = document.getElementById('searchInput').value.trim();
-            if (q) params.set('q', q);
-            if (currentPage > 1) params.set('page', currentPage);
-            if (currentSort !== 'newest') params.set('sort', currentSort);
-            if (isExploreMode) params.set('mode', 'explore');
-            if (selectedTags.size > 0) params.set('tags', [...selectedTags].join(','));
-            history.replaceState(null, '', `?${params.toString()}`);
-        }
-
-        function restoreFromURL() {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('q')) document.getElementById('searchInput').value = params.get('q');
-            if (params.get('page')) currentPage = parseInt(params.get('page'));
-            if (params.get('sort')) { currentSort = params.get('sort'); document.getElementById('sortSelect').value = currentSort; }
-            if (params.get('mode') === 'explore') { isExploreMode = true; document.getElementById('exploreBtn').classList.add('active'); document.getElementById('exploreBtn').textContent = '✅ 探索中'; document.getElementById('sortSelect').disabled = true; }
-            if (params.get('tags')) {
-                params.get('tags').split(',').forEach(tag => {
-                    selectedTags.add(tag);
-                    document.querySelector(`.tags-cloud button[data-tag="${tag}"]`)?.classList.add('selected');
+            // 2. 排序 / 随机
+            if (isExploreMode) {
+                shuffleArray(displayData);
+            } else {
+                displayData.sort((a, b) => {
+                    const timeA = new Date(a.uploadTime).getTime();
+                    const timeB = new Date(b.uploadTime).getTime();
+                    return currentSort === 'newest' ? timeB - timeA : timeA - timeB;
                 });
+            }
+
+            // 3. 更新统计
+            document.getElementById('statsText').innerText = `共找到 ${displayData.length} 个资源`;
+
+            // 4. 渲染
+            renderPage(currentPage);
+        }
+
+        // Fisher-Yates 洗牌算法
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
             }
         }
 
+        // 渲染页面
         function renderPage(page) {
             currentPage = page;
             const start = (page - 1) * ITEMS_PER_PAGE;
@@ -193,7 +223,7 @@
             const container = document.getElementById('app');
             
             if (data.length === 0) {
-                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">😕 无匹配结果</p>';
+                container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">无匹配结果，尝试调整搜索或标签筛选。</div>';
                 document.getElementById('pagination').innerHTML = '';
                 return;
             }
@@ -202,76 +232,156 @@
                 const imgSrc = item.image ? `封面/${item.image}` : `封面/${item.id}.png`;
                 const links = [];
                 if(item.fileUrl) links.push(`<a href="${item.fileUrl}" target="_blank">文件</a>`);
-                if(item.docUrl) links.push(`<a href="${item.docUrl}" target="_blank">文档1</a>`);
+                if(item.docUrl) links.push(`<a href="${item.docUrl}" target="_blank">文档</a>`);
                 if(item.docUrl2) links.push(`<a href="${item.docUrl2}" target="_blank">文档2</a>`);
                 if(item.exampleUrl) links.push(`<a href="${item.exampleUrl}" target="_blank">示例</a>`);
-                const shareUrl = `${location.origin}${location.pathname}?id=${item.id}`;
+
+                // 生成当前卡片的分享链接 (带 ID 参数)
+                const shareUrl = `${window.location.origin}${window.location.pathname}?id=${item.id}`;
 
                 return `
-                <article class="card">
-                    <button class="copy-btn" onclick="copyLink('${shareUrl}', event)" title="复制链接">📋</button>
-                    <img src="${imgSrc}" alt="${item.name}" loading="lazy" onerror="this.style.display='none'" onclick="previewImage('${imgSrc}')">
+                <div class="card" id="card-${item.id}">
+                    <div class="card-img-wrap" onclick="openLightbox('${imgSrc}', '${item.name.replace(/'/g, "\\'")}')">
+                        <img src="${imgSrc}" alt="${item.name}" loading="lazy" onerror="this.style.display='none'">
+                        <button class="copy-btn" title="复制卡片链接" onclick="copyLink(event, '${shareUrl}')">📋</button>
+                    </div>
                     <h3>${item.name}</h3>
                     <p>${item.desc}</p>
-                    <div class="tags">${item.tags.map(t => `<span>#${t}</span>`).join('')}</div>
+                    <div class="card-tags">${(item.tags||[]).map(t => `<span>#${t}</span>`).join('')}</div>
                     <div class="authors">作者：${item.authors.map(a => `<a href="${a.url}" target="_blank">${a.name}</a>`).join(' ')}</div>
                     <div class="links">${links.join('')}</div>
-                    <div style="font-size:0.7em;color:#999;margin-top:5px;">📅 ${item.uploadTime}</div>
-                </article>`;
+                    <div style="font-size:0.7em;color:#999;margin-top:8px;">📅 ${item.uploadTime}</div>
+                </div>`;
             }).join('');
+
             renderPagination(total);
+            updateURL(); // 确保页码变化时 URL 也更新
         }
 
+        // 渲染分页
         function renderPagination(total) {
             const container = document.getElementById('pagination');
             if (total <= 1) { container.innerHTML = ''; return; }
-            let html = `<button onclick="renderPage(${currentPage-1})" ${currentPage===1?'disabled':''}>上一页</button>`;
+            
+            let html = `<button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
+            
+            // 简化分页逻辑
             for (let i = 1; i <= total; i++) {
                 if (i === 1 || i === total || (i >= currentPage - 1 && i <= currentPage + 1)) {
-                    html += `<button onclick="renderPage(${i})" class="${i===currentPage?'active':''}">${i}</button>`;
+                    html += `<button onclick="goToPage(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
                 } else if (i === currentPage - 2 || i === currentPage + 2) {
                     html += `<span>...</span>`;
                 }
             }
-            html += `<button onclick="renderPage(${currentPage+1})" ${currentPage===total?'disabled':''}>下一页</button>`;
+            
+            html += `<button onclick="goToPage(${currentPage + 1})" ${currentPage === total ? 'disabled' : ''}>下一页</button>`;
             container.innerHTML = html;
         }
 
-        function previewImage(src) {
-            document.getElementById('modalImg').src = src;
-            document.getElementById('imageModal').classList.add('active');
+        function goToPage(p) {
+            if (p < 1 || p > Math.ceil(displayData.length / ITEMS_PER_PAGE)) return;
+            currentPage = p;
+            applyFiltersAndSort();
         }
 
-        async function copyLink(url, e) {
-            e.stopPropagation();
-            try {
-                await navigator.clipboard.writeText(url);
-                const btn = e.currentTarget;
-                const origin = btn.textContent;
-                btn.textContent = '✅';
-                setTimeout(() => btn.textContent = origin, 1500);
-            } catch { alert('复制失败，请手动复制'); }
+        // --- URL 状态同步 ---
+        function updateURL() {
+            const params = new URLSearchParams();
+            const searchVal = document.getElementById('searchInput').value.trim();
+            if (searchVal) params.set('q', searchVal);
+            if (currentPage > 1) params.set('page', currentPage);
+            if (isExploreMode) params.set('mode', 'explore');
+            if (currentSort !== 'newest') params.set('sort', currentSort);
+            if (selectedTags.size > 0) params.set('tags', Array.from(selectedTags).join(','));
+            
+            const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`;
+            history.replaceState(null, '', newUrl);
         }
 
-        // 支持直接跳转 ID
-        function jumpToId() {
-            const id = new URLSearchParams(window.location.search).get('id');
-            if (!id) return;
-            const idx = allData.findIndex(item => item.id === id);
-            if (idx !== -1) {
-                currentPage = Math.floor(idx / ITEMS_PER_PAGE) + 1;
-                renderPage(currentPage);
-                setTimeout(() => {
-                    const card = document.querySelector(`article.card:nth-child(${(idx % ITEMS_PER_PAGE) + 1})`);
-                    card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    card?.style.boxShadow = '0 0 0 3px #0066cc';
-                    setTimeout(() => card.style.boxShadow = '', 2000);
-                }, 100);
+        function restoreStateFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            
+            // 1. 搜索
+            const q = params.get('q');
+            if (q) document.getElementById('searchInput').value = q;
+
+            // 2. 排序
+            const sort = params.get('sort');
+            if (sort) {
+                currentSort = sort;
+                document.getElementById('sortSelect').value = sort;
+            }
+
+            // 3. 探索模式
+            if (params.get('mode') === 'explore') {
+                toggleExplore(); // 内部会处理 UI 和逻辑
+                // 注意：toggleExplore 会重置页码并调用 apply，这里需要稍微控制流程
+                // 由于 toggleExplore 内部调用了 apply，我们暂时不重复调用，但要确保其他参数合并
+            }
+
+            // 4. 标签
+            const tagsStr = params.get('tags');
+            if (tagsStr) {
+                tagsStr.split(',').forEach(t => selectedTags.add(t));
+                renderTagsCloud();
+            }
+
+            // 5. 特殊：直接通过 ID 访问 (分享卡片链接)
+            const id = params.get('id');
+            if (id) {
+                const item = allData.find(i => i.id == id);
+                if (item) {
+                    // 高亮该卡片所在的页（简单处理：先找到它，然后滚动）
+                    // 为了体验，我们暂时只搜索到这个 ID 并高亮，或者跳转到它所在的页
+                    // 这里简单处理：将搜索框设为 ID，强制筛选出它
+                    document.getElementById('searchInput').value = id; 
+                    // 不清空其他标签，保持叠加
+                }
+            }
+
+            // 6. 页码 (最后应用，避免中间过程闪烁)
+            const page = parseInt(params.get('page') || '1');
+            currentPage = page;
+        }
+
+        // --- 工具功能 ---
+
+        // 复制链接
+        function copyLink(e, url) {
+            e.stopPropagation(); // 防止触发图片放大
+            navigator.clipboard.writeText(url).then(() => {
+                const btn = e.target;
+                const original = btn.innerText;
+                btn.innerText = '✅';
+                setTimeout(() => btn.innerText = original, 1500);
+            }).catch(err => alert('复制失败'));
+        }
+
+        // 灯箱 (全屏)
+        function openLightbox(src, title) {
+            const lb = document.getElementById('lightbox');
+            const img = document.getElementById('lightboxImg');
+            const cap = document.getElementById('lightboxCaption');
+            img.src = src;
+            cap.innerText = title;
+            lb.classList.add('active');
+            document.body.style.overflow = 'hidden'; // 禁止背景滚动
+        }
+
+        function closeLightbox(e) {
+            if (e.target.id === 'lightbox' || e.target.classList.contains('lightbox-close')) {
+                document.getElementById('lightbox').classList.remove('active');
+                document.body.style.overflow = '';
             }
         }
+        
+        // 键盘关闭灯箱
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeLightbox({target: {id: 'lightbox'}});
+        });
 
+        // 启动
         init();
-        jumpToId();
     </script>
 </body>
 </html>
