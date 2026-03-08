@@ -1,190 +1,199 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="light">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="静态资源展示页面">
     <title>资源列表</title>
     <style>
-        :root { --bg: #f5f5f5; --text: #333; --card-bg: #fff; --border: #ddd; --primary: #0066cc; --shadow: rgba(0,0,0,0.1); }
-        [data-theme="dark"] { --bg: #1a1a1a; --text: #e0e0e0; --card-bg: #2d2d2d; --border: #444; --primary: #4da3ff; --shadow: rgba(0,0,0,0.5); }
-        body { font-family: sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: var(--bg); color: var(--text); transition: 0.3s; }
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .controls { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
-        input, select, button { padding: 10px; border: 1px solid var(--border); border-radius: 4px; background: var(--card-bg); color: var(--text); }
-        input { width: 60%; max-width: 400px; }
-        button { cursor: pointer; }
-        button.active { background: #666; color: #fff; border-color: #666; } /* 灰色选中态 */
-        .tags-cloud { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; margin-bottom: 20px; scrollbar-width: none; }
-        .tags-cloud button { white-space: nowrap; font-size: 0.9em; }
-        .stats { text-align: center; margin-bottom: 10px; font-size: 0.9em; color: #888; }
+        body { font-family: sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        header { margin-bottom: 20px; }
+        .controls { display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; }
+        .controls input, .controls select, .controls button { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        .controls input { width: 60%; max-width: 400px; }
+        .controls button { cursor: pointer; background: #fff; transition: 0.2s; }
+        .controls button.active { background: #0066cc; color: #fff; border-color: #0066cc; }
+        .tags-cloud { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px; }
+        .tags-cloud button { padding: 4px 12px; border: 1px solid #ccc; background: #fff; border-radius: 20px; font-size: 0.85em; cursor: pointer; transition: 0.2s; }
+        .tags-cloud button.selected { background: #999; color: #fff; border-color: #999; }
+        .stats { text-align: center; color: #666; font-size: 0.9em; margin-bottom: 15px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .card { background: var(--card-bg); padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px var(--shadow); display: flex; flex-direction: column; position: relative; }
+        article.card { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; }
         .card img { width: 100%; height: 160px; object-fit: cover; border-radius: 4px; background: #eee; cursor: zoom-in; }
         .card h3 { margin: 10px 0 5px; font-size: 1.1em; }
-        .card p { font-size: 0.9em; opacity: 0.8; flex-grow: 1; }
-        .card-tags span { background: var(--primary); opacity: 0.2; color: var(--primary); padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-right: 5px; }
+        .card p { font-size: 0.9em; color: #666; flex-grow: 1; }
+        .tags span { background: #e0f0ff; color: #0066cc; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-right: 5px; }
         .authors { margin: 10px 0; font-size: 0.85em; }
-        .authors a { color: var(--text); text-decoration: none; opacity: 0.7; }
+        .authors a { color: #555; text-decoration: none; margin-right: 8px; }
         .links { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
-        .links a { flex: 1; min-width: 60px; text-align: center; padding: 5px; background: var(--text); color: var(--bg); text-decoration: none; border-radius: 4px; font-size: 0.8em; }
-        .card-actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; }
-        .card-actions button { padding: 4px 8px; font-size: 0.8em; background: rgba(0,0,0,0.5); color: #fff; border: none; }
+        .links a { flex: 1; min-width: 60px; text-align: center; padding: 5px; background: #333; color: #fff; text-decoration: none; border-radius: 4px; font-size: 0.8em; }
+        .copy-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 1.1em; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        .copy-btn:hover { background: #eee; }
         .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 30px; }
-        .pagination button { padding: 8px 16px; }
-        .pagination button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .pagination button { padding: 8px 16px; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 4px; }
+        .pagination button.active { background: #333; color: #fff; border-color: #333; }
         .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .skeleton { background: linear-gradient(90deg, var(--card-bg) 25%, var(--border) 50%, var(--card-bg) 75%); background-size: 200% 100%; animation: loading 1.5s infinite; }
-        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
-        .modal img { max-width: 90%; max-height: 90%; border-radius: 4px; }
-        #backToTop { position: fixed; bottom: 20px; right: 20px; padding: 10px 15px; border-radius: 50%; display: none; z-index: 999; }
+        /* 图片预览 Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal img { max-width: 90%; max-height: 90%; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        .modal-close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 2em; cursor: pointer; }
     </style>
 </head>
 <body>
     <header>
-        <h1>资源库</h1>
-        <button onclick="toggleTheme()" id="themeBtn">🌙 深色</button>
+        <div class="controls">
+            <input type="text" id="searchInput" placeholder="搜索名称/介绍/标签/作者...">
+            <select id="sortSelect">
+                <option value="newest">最新上传</option>
+                <option value="oldest">最旧上传</option>
+            </select>
+            <button id="exploreBtn">🔍 探索模式</button>
+        </div>
+        <div id="tagsCloud" class="tags-cloud"></div>
+        <div id="stats" class="stats">共找到 0 个资源</div>
     </header>
-    <div class="controls">
-        <input type="text" id="searchInput" placeholder="搜索..." oninput="handleStateChange()">
-        <select id="sortSelect" onchange="handleStateChange()">
-            <option value="newest">最新</option>
-            <option value="oldest">最旧</option>
-        </select>
-        <button id="exploreBtn" onclick="toggleExplore()">🔍 探索</button>
-    </div>
-    <div class="tags-cloud" id="tagsCloud"></div>
-    <div class="stats" id="stats"></div>
-    <div id="app" class="grid"></div>
+
+    <main id="app" class="grid"></main>
     <div id="pagination" class="pagination"></div>
-    
-    <div id="imageModal" class="modal" onclick="this.style.display='none'">
-        <img id="modalImg" src="" alt="Preview">
+
+    <!-- 图片预览 Modal -->
+    <div id="imageModal" class="modal" onclick="this.classList.remove('active')">
+        <span class="modal-close">&times;</span>
+        <img id="modalImg" src="" alt="预览">
     </div>
-    <button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
     <script>
         const ITEMS_PER_PAGE = 20;
-        let allData = [];
-        let displayData = [];
-        let state = { page: 1, sort: 'newest', search: '', explore: false, tags: [] };
-        let isLoading = true;
-        let allTags = [];
+        let allData = [], displayData = [], availableTags = [];
+        let currentPage = 1, currentSort = 'newest', isExploreMode = false, selectedTags = new Set();
 
-        const escapeHtml = (text) => (text || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-        
         async function init() {
-            const params = new URLSearchParams(window.location.search);
-            state.search = params.get('q') || '';
-            state.page = parseInt(params.get('page')) || 1;
-            state.sort = params.get('sort') || 'newest';
-            state.explore = params.get('mode') === 'explore';
-            state.tags = params.get('tags') ? params.get('tags').split(',') : [];
-            
-            document.getElementById('searchInput').value = state.search;
-            document.getElementById('sortSelect').value = state.sort;
-            updateExploreBtn();
-            loadTheme();
-
             try {
                 const res = await fetch('信息.json');
                 allData = await res.json();
-                // 提取所有唯一标签
-                allTags = [...new Set(allData.flatMap(i => i.tags || []))];
-                isLoading = false;
-                processAndRender();
+                // 提取标签云
+                availableTags = [...new Set(allData.flatMap(item => item.tags))];
+                renderTagsCloud();
+                // 读取 URL 参数恢复状态
+                restoreFromURL();
+                applyFiltersAndSort();
+                // 绑定事件
+                bindEvents();
             } catch (e) {
-                document.getElementById('app').innerHTML = '<p>加载失败</p>';
+                document.getElementById('app').innerHTML = '<p>加载失败，请检查.json 文件或 CORS 设置。</p>';
             }
-            
-            window.addEventListener('popstate', () => location.reload());
-            window.addEventListener('scroll', () => {
-                document.getElementById('backToTop').style.display = window.scrollY > 300 ? 'block' : 'none';
-            });
         }
 
-        function handleStateChange() {
-            state.search = document.getElementById('searchInput').value;
-            state.sort = document.getElementById('sortSelect').value;
-            state.page = 1;
-            state.explore = false;
-            updateExploreBtn();
-            updateURL();
-            processAndRender();
+        function bindEvents() {
+            document.getElementById('searchInput').addEventListener('input', () => { currentPage = 1; applyFiltersAndSort(); });
+            document.getElementById('sortSelect').addEventListener('change', (e) => { currentSort = e.target.value; currentPage = 1; applyFiltersAndSort(); });
+            document.getElementById('exploreBtn').addEventListener('click', toggleExplore);
+            // 图片预览
+            document.getElementById('imageModal').addEventListener('click', (e) => { if(e.target.tagName !== 'IMG') e.currentTarget.classList.remove('active'); });
+            document.addEventListener('keydown', (e) => { if(e.key === 'Escape') document.getElementById('imageModal').classList.remove('active'); });
         }
 
-        function toggleExplore() {
-            state.explore = !state.explore;
-            state.page = 1;
-            updateExploreBtn();
-            updateURL();
-            processAndRender();
+        function renderTagsCloud() {
+            const container = document.getElementById('tagsCloud');
+            container.innerHTML = availableTags.map(tag => 
+                `<button data-tag="${tag}" onclick="toggleTag('${tag}')">${tag}</button>`
+            ).join('');
         }
 
         function toggleTag(tag) {
-            const index = state.tags.indexOf(tag);
-            if (index > -1) {
-                state.tags.splice(index, 1); // 取消选择
-            } else {
-                state.tags.push(tag); // 选择
-            }
-            state.page = 1;
-            updateURL();
-            renderTags(); // 更新标签样式
-            processAndRender(); // 重新过滤
+            selectedTags.has(tag) ? selectedTags.delete(tag) : selectedTags.add(tag);
+            // 更新 UI
+            document.querySelectorAll(`.tags-cloud button[data-tag="${tag}"]`).forEach(btn => btn.classList.toggle('selected'));
+            currentPage = 1;
+            applyFiltersAndSort();
         }
 
-        function processAndRender() {
-            // 1. 过滤
+        function toggleExplore() {
+            isExploreMode = !isExploreMode;
+            const btn = document.getElementById('exploreBtn');
+            const sortSelect = document.getElementById('sortSelect');
+            btn.classList.toggle('active', isExploreMode);
+            btn.textContent = isExploreMode ? '✅ 探索中' : '🔍 探索模式';
+            sortSelect.disabled = isExploreMode;
+            currentPage = 1;
+            applyFiltersAndSort();
+        }
+
+        function shuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function applyFiltersAndSort() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            
             displayData = allData.filter(item => {
-                const q = state.search.toLowerCase();
-                const matchSearch = item.name.toLowerCase().includes(q) ||
-                                    item.desc.toLowerCase().includes(q) ||
-                                    (item.tags || []).some(t => t.toLowerCase().includes(q)) ||
-                                    (item.authors || []).some(a => a.name.toLowerCase().includes(q));
-                // 多选标签逻辑：必须包含所有选中的标签 (AND)
-                const matchTags = state.tags.length === 0 || state.tags.every(t => (item.tags || []).includes(t));
-                return matchSearch && matchTags;
+                const matchText = item.name.toLowerCase().includes(query) || item.desc.toLowerCase().includes(query) || 
+                                 item.tags.some(t => t.toLowerCase().includes(query)) || item.authors.some(a => a.name.toLowerCase().includes(query));
+                const matchTags = selectedTags.size === 0 || [...selectedTags].every(t => item.tags.includes(t));
+                return matchText && matchTags;
             });
 
-            // 2. 排序
-            if (state.explore) {
-                displayData.sort(() => Math.random() - 0.5);
-            } else {
-                displayData.sort((a, b) => {
-                    const timeA = new Date(a.uploadTime).getTime();
-                    const timeB = new Date(b.uploadTime).getTime();
-                    return state.sort === 'newest' ? timeB - timeA : timeA - timeB;
-                });
-            }
+            if (isExploreMode) shuffle(displayData);
+            else displayData.sort((a, b) => {
+                const tA = new Date(a.uploadTime).getTime(), tB = new Date(b.uploadTime).getTime();
+                return currentSort === 'newest' ? tB - tA : tA - tB;
+            });
 
-            document.getElementById('stats').innerText = `共 ${displayData.length} 个资源`;
-            document.title = `资源列表 (${displayData.length})`;
-            renderPage(state.page);
+            updateStats();
+            updateMeta();
+            updateURL();
+            renderPage(1);
         }
 
-        function renderTags() {
-            const container = document.getElementById('tagsCloud');
-            container.innerHTML = allTags.map(tag => {
-                const isActive = state.tags.includes(tag);
-                return `<button class="${isActive ? 'active' : ''}" onclick="toggleTag('${tag}')">#${tag}</button>`;
-            }).join('');
+        function updateStats() {
+            document.getElementById('stats').textContent = `共找到 ${displayData.length} 个资源`;
+        }
+
+        function updateMeta() {
+            const q = document.getElementById('searchInput').value;
+            document.title = q ? `搜索: ${q} - 资源列表` : '资源列表';
+            document.querySelector('meta[name="description"]').content = `浏览 ${displayData.length} 个静态资源项目`;
+        }
+
+        function updateURL() {
+            const params = new URLSearchParams();
+            const q = document.getElementById('searchInput').value.trim();
+            if (q) params.set('q', q);
+            if (currentPage > 1) params.set('page', currentPage);
+            if (currentSort !== 'newest') params.set('sort', currentSort);
+            if (isExploreMode) params.set('mode', 'explore');
+            if (selectedTags.size > 0) params.set('tags', [...selectedTags].join(','));
+            history.replaceState(null, '', `?${params.toString()}`);
+        }
+
+        function restoreFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('q')) document.getElementById('searchInput').value = params.get('q');
+            if (params.get('page')) currentPage = parseInt(params.get('page'));
+            if (params.get('sort')) { currentSort = params.get('sort'); document.getElementById('sortSelect').value = currentSort; }
+            if (params.get('mode') === 'explore') { isExploreMode = true; document.getElementById('exploreBtn').classList.add('active'); document.getElementById('exploreBtn').textContent = '✅ 探索中'; document.getElementById('sortSelect').disabled = true; }
+            if (params.get('tags')) {
+                params.get('tags').split(',').forEach(tag => {
+                    selectedTags.add(tag);
+                    document.querySelector(`.tags-cloud button[data-tag="${tag}"]`)?.classList.add('selected');
+                });
+            }
         }
 
         function renderPage(page) {
-            state.page = page;
+            currentPage = page;
             const start = (page - 1) * ITEMS_PER_PAGE;
             const data = displayData.slice(start, start + ITEMS_PER_PAGE);
             const total = Math.ceil(displayData.length / ITEMS_PER_PAGE);
             const container = document.getElementById('app');
             
-            if (isLoading) {
-                container.innerHTML = Array(20).fill('<div class="card skeleton" style="height:300px"></div>').join('');
-                return;
-            }
-
             if (data.length === 0) {
-                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">无匹配结果</p>';
+                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">😕 无匹配结果</p>';
                 document.getElementById('pagination').innerHTML = '';
                 return;
             }
@@ -193,94 +202,76 @@
                 const imgSrc = item.image ? `封面/${item.image}` : `封面/${item.id}.png`;
                 const links = [];
                 if(item.fileUrl) links.push(`<a href="${item.fileUrl}" target="_blank">文件</a>`);
-                if(item.docUrl) links.push(`<a href="${item.docUrl}" target="_blank">文档 1</a>`);
-                if(item.docUrl2) links.push(`<a href="${item.docUrl2}" target="_blank">文档 2</a>`);
+                if(item.docUrl) links.push(`<a href="${item.docUrl}" target="_blank">文档1</a>`);
+                if(item.docUrl2) links.push(`<a href="${item.docUrl2}" target="_blank">文档2</a>`);
                 if(item.exampleUrl) links.push(`<a href="${item.exampleUrl}" target="_blank">示例</a>`);
-                const tagsHtml = (item.tags || []).map(t => `<span>#${escapeHtml(t)}</span>`).join('');
+                const shareUrl = `${location.origin}${location.pathname}?id=${item.id}`;
 
                 return `
-                <article class="card" id="card-${item.id}">
-                    <div class="card-actions">
-                        <button onclick="copyLink('${item.id}')" title="复制链接">🔗</button>
-                    </div>
-                    <img src="${imgSrc}" alt="${escapeHtml(item.name)}" loading="lazy" onclick="previewImage('${imgSrc}')">
-                    <h3>${escapeHtml(item.name)}</h3>
-                    <p>${escapeHtml(item.desc)}</p>
-                    <div class="card-tags">${tagsHtml}</div>
-                    <div class="authors">作者：${(item.authors || []).map(a => `<a href="${a.url}" target="_blank">${escapeHtml(a.name)}</a>`).join(' ')}</div>
+                <article class="card">
+                    <button class="copy-btn" onclick="copyLink('${shareUrl}', event)" title="复制链接">📋</button>
+                    <img src="${imgSrc}" alt="${item.name}" loading="lazy" onerror="this.style.display='none'" onclick="previewImage('${imgSrc}')">
+                    <h3>${item.name}</h3>
+                    <p>${item.desc}</p>
+                    <div class="tags">${item.tags.map(t => `<span>#${t}</span>`).join('')}</div>
+                    <div class="authors">作者：${item.authors.map(a => `<a href="${a.url}" target="_blank">${a.name}</a>`).join(' ')}</div>
                     <div class="links">${links.join('')}</div>
-                    <div style="font-size:0.7em;color:#888;margin-top:5px;">${item.uploadTime}</div>
+                    <div style="font-size:0.7em;color:#999;margin-top:5px;">📅 ${item.uploadTime}</div>
                 </article>`;
             }).join('');
-
             renderPagination(total);
-            updateURL();
         }
 
         function renderPagination(total) {
             const container = document.getElementById('pagination');
             if (total <= 1) { container.innerHTML = ''; return; }
-            let html = `<button onclick="renderPage(${state.page - 1})" ${state.page === 1 ? 'disabled' : ''}>上一页</button>`;
+            let html = `<button onclick="renderPage(${currentPage-1})" ${currentPage===1?'disabled':''}>上一页</button>`;
             for (let i = 1; i <= total; i++) {
-                if (i === 1 || i === total || (i >= state.page - 1 && i <= state.page + 1)) {
-                    html += `<button onclick="renderPage(${i})" class="${i === state.page ? 'active' : ''}">${i}</button>`;
-                } else if (i === state.page - 2 || i === state.page + 2) {
+                if (i === 1 || i === total || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    html += `<button onclick="renderPage(${i})" class="${i===currentPage?'active':''}">${i}</button>`;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
                     html += `<span>...</span>`;
                 }
             }
-            html += `<button onclick="renderPage(${state.page + 1})" ${state.page === total ? 'disabled' : ''}>下一页</button>`;
+            html += `<button onclick="renderPage(${currentPage+1})" ${currentPage===total?'disabled':''}>下一页</button>`;
             container.innerHTML = html;
-        }
-
-        function updateURL() {
-            const params = new URLSearchParams();
-            if (state.search) params.set('q', state.search);
-            if (state.page > 1) params.set('page', state.page);
-            if (state.sort !== 'newest') params.set('sort', state.sort);
-            if (state.explore) params.set('mode', 'explore');
-            if (state.tags.length > 0) params.set('tags', state.tags.join(','));
-            history.pushState(null, '', `?${params.toString()}`);
-        }
-
-        function updateExploreBtn() {
-            const btn = document.getElementById('exploreBtn');
-            const sortSelect = document.getElementById('sortSelect');
-            if (state.explore) {
-                btn.classList.add('active');
-                btn.innerText = '✅ 探索中';
-                sortSelect.disabled = true;
-            } else {
-                btn.classList.remove('active');
-                btn.innerText = '🔍 探索';
-                sortSelect.disabled = false;
-            }
-        }
-
-        function toggleTheme() {
-            const html = document.documentElement;
-            const isDark = html.getAttribute('data-theme') === 'dark';
-            html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-            document.getElementById('themeBtn').innerText = isDark ? '🌙 深色' : '☀️ 浅色';
-            localStorage.setItem('theme', isDark ? 'light' : 'dark');
-        }
-
-        function loadTheme() {
-            const theme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', theme);
-            document.getElementById('themeBtn').innerText = theme === 'dark' ? '☀️ 浅色' : '🌙 深色';
         }
 
         function previewImage(src) {
             document.getElementById('modalImg').src = src;
-            document.getElementById('imageModal').style.display = 'flex';
+            document.getElementById('imageModal').classList.add('active');
         }
 
-        function copyLink(id) {
-            const url = `${window.location.origin}${window.location.pathname}#card-${id}`;
-            navigator.clipboard.writeText(url).then(() => alert('链接已复制')).catch(() => alert('复制失败'));
+        async function copyLink(url, e) {
+            e.stopPropagation();
+            try {
+                await navigator.clipboard.writeText(url);
+                const btn = e.currentTarget;
+                const origin = btn.textContent;
+                btn.textContent = '✅';
+                setTimeout(() => btn.textContent = origin, 1500);
+            } catch { alert('复制失败，请手动复制'); }
+        }
+
+        // 支持直接跳转 ID
+        function jumpToId() {
+            const id = new URLSearchParams(window.location.search).get('id');
+            if (!id) return;
+            const idx = allData.findIndex(item => item.id === id);
+            if (idx !== -1) {
+                currentPage = Math.floor(idx / ITEMS_PER_PAGE) + 1;
+                renderPage(currentPage);
+                setTimeout(() => {
+                    const card = document.querySelector(`article.card:nth-child(${(idx % ITEMS_PER_PAGE) + 1})`);
+                    card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    card?.style.boxShadow = '0 0 0 3px #0066cc';
+                    setTimeout(() => card.style.boxShadow = '', 2000);
+                }, 100);
+            }
         }
 
         init();
+        jumpToId();
     </script>
 </body>
 </html>
