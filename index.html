@@ -6,13 +6,18 @@
     <title>资源列表</title>
     <style>
         body { font-family: sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .section-title { font-size: 1.5em; margin: 30px 0 15px; padding-bottom: 10px; border-bottom: 2px solid #333; }
+        .section-title.official { border-color: #0066cc; }
+        .section-title.community { border-color: #28a745; }
         .controls { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
         .controls input, .controls select, .controls button { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
         .controls input { width: 60%; max-width: 400px; }
         .controls button { cursor: pointer; background: #fff; transition: 0.2s; }
         .controls button.active { background: #0066cc; color: #fff; border-color: #0066cc; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .card { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        .card { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; }
+        .card.community { border-left: 4px solid #28a745; }
+        .card.official { border-left: 4px solid #0066cc; }
         .card img { width: 100%; height: 160px; object-fit: cover; border-radius: 4px; background: #eee; }
         .card h3 { margin: 10px 0 5px; font-size: 1.1em; }
         .card p { font-size: 0.9em; color: #666; flex-grow: 1; }
@@ -25,35 +30,59 @@
         .pagination button { padding: 8px 16px; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 4px; }
         .pagination button.active { background: #333; color: #fff; border-color: #333; }
         .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .badge { position: absolute; top: 10px; right: 10px; padding: 3px 8px; border-radius: 4px; font-size: 0.7em; color: #fff; }
+        .badge.official { background: #0066cc; }
+        .badge.community { background: #28a745; }
+        .upload-link { text-align: center; margin: 20px 0; }
+        .upload-link a { display: inline-block; padding: 12px 30px; background: #28a745; color: #fff; text-decoration: none; border-radius: 6px; font-weight: bold; }
+        .upload-link a:hover { background: #218838; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
     <div class="controls">
         <input type="text" id="searchInput" placeholder="搜索名称、介绍、标签、作者..." oninput="handleSearch()">
-        <select id="sortSelect" onchange="handleSort()" ${isExploreMode ? 'disabled' : ''}>
+        <select id="sortSelect" onchange="handleSort()">
             <option value="newest">最新上传</option>
             <option value="oldest">最旧上传</option>
         </select>
         <button id="exploreBtn" onclick="toggleExplore()">🔍 探索模式</button>
     </div>
-    <div id="app" class="grid"></div>
-    <div id="pagination" class="pagination"></div>
+
+    <div class="upload-link">
+        <a href="loadup.html">📤 提交您的扩展</a>
+    </div>
+
+    <h2 class="section-title official">📌 官方资源</h2>
+    <div id="officialApp" class="grid"></div>
+    <div id="officialPagination" class="pagination"></div>
+
+    <h2 class="section-title community">🌟 社区贡献</h2>
+    <div id="communityApp" class="grid"></div>
+    <div id="communityPagination" class="pagination"></div>
 
     <script>
         const ITEMS_PER_PAGE = 20;
-        let allData = [];
-        let displayData = [];
-        let currentPage = 1;
+        let officialData = [];
+        let communityData = [];
+        let displayOfficial = [];
+        let displayCommunity = [];
+        let officialPage = 1;
+        let communityPage = 1;
         let currentSort = 'newest';
         let isExploreMode = false;
 
         async function init() {
             try {
-                const res = await fetch('信息.json');
-                allData = await res.json();
+                const [res1, res2] = await Promise.all([
+                    fetch('信息.json'),
+                    fetch('其他用户上传.json')
+                ]);
+                officialData = await res1.json();
+                communityData = await res2.json();
                 applyFiltersAndSort();
             } catch (e) {
-                document.getElementById('app').innerHTML = '<p>加载失败</p>';
+                document.getElementById('officialApp').innerHTML = '<p>加载失败</p>';
             }
         }
 
@@ -61,7 +90,6 @@
             isExploreMode = !isExploreMode;
             const btn = document.getElementById('exploreBtn');
             const sortSelect = document.getElementById('sortSelect');
-            
             if (isExploreMode) {
                 btn.classList.add('active');
                 btn.innerText = '✅ 探索中';
@@ -71,68 +99,77 @@
                 btn.innerText = '🔍 探索模式';
                 sortSelect.disabled = false;
             }
-            currentPage = 1;
+            officialPage = 1;
+            communityPage = 1;
             applyFiltersAndSort();
         }
 
         function handleSearch() {
-            currentPage = 1;
+            officialPage = 1;
+            communityPage = 1;
             applyFiltersAndSort();
         }
 
         function handleSort() {
             if (isExploreMode) return;
             currentSort = document.getElementById('sortSelect').value;
-            currentPage = 1;
+            officialPage = 1;
+            communityPage = 1;
             applyFiltersAndSort();
         }
 
         function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+                [arr[i], arr[j]] = [arr[j], arr[i]];
             }
-            return array;
+            return arr;
         }
 
-        function applyFiltersAndSort() {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            
-            displayData = allData.filter(item => 
+        function filterData(data, query) {
+            return data.filter(item => 
                 item.name.toLowerCase().includes(query) ||
                 item.desc.toLowerCase().includes(query) ||
                 item.tags.some(t => t.toLowerCase().includes(query)) ||
                 item.authors.some(a => a.name.toLowerCase().includes(query))
             );
-
-            if (isExploreMode) {
-                shuffle(displayData);
-            } else {
-                displayData.sort((a, b) => {
-                    const timeA = new Date(a.uploadTime).getTime();
-                    const timeB = new Date(b.uploadTime).getTime();
-                    return currentSort === 'newest' ? timeB - timeA : timeA - timeB;
-                });
-            }
-
-            renderPage(1);
         }
 
-        function renderPage(page) {
-            currentPage = page;
+        function sortData(data) {
+            if (isExploreMode) return shuffle(data);
+            return data.sort((a, b) => {
+                const timeA = new Date(a.uploadTime).getTime();
+                const timeB = new Date(b.uploadTime).getTime();
+                return currentSort === 'newest' ? timeB - timeA : timeA - timeB;
+            });
+        }
+
+        function applyFiltersAndSort() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            displayOfficial = sortData(filterData(officialData, query));
+            displayCommunity = sortData(filterData(communityData, query));
+            renderSection('official');
+            renderSection('community');
+        }
+
+        function renderSection(type) {
+            const data = type === 'official' ? displayOfficial : displayCommunity;
+            const page = type === 'official' ? officialPage : communityPage;
             const start = (page - 1) * ITEMS_PER_PAGE;
-            const data = displayData.slice(start, start + ITEMS_PER_PAGE);
-            const total = Math.ceil(displayData.length / ITEMS_PER_PAGE);
-            const container = document.getElementById('app');
-            
-            if (data.length === 0) {
+            const slice = data.slice(start, start + ITEMS_PER_PAGE);
+            const total = Math.ceil(data.length / ITEMS_PER_PAGE);
+            const container = document.getElementById(type + 'App');
+            const pagContainer = document.getElementById(type + 'Pagination');
+
+            if (slice.length === 0) {
                 container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">无匹配结果</p>';
-                document.getElementById('pagination').innerHTML = '';
+                pagContainer.innerHTML = '';
                 return;
             }
 
-            container.innerHTML = data.map(item => {
-                const imgSrc = item.image ? `封面/${item.image}` : `封面/${item.id}.png`;
+            container.innerHTML = slice.map(item => {
+                const imgSrc = item.image?.startsWith('http') ? item.image : `封面/${item.image}`;
                 const links = [];
                 if(item.fileUrl) links.push(`<a href="${item.fileUrl}" target="_blank">文件</a>`);
                 if(item.docUrl) links.push(`<a href="${item.docUrl}" target="_blank">文档 1</a>`);
@@ -140,7 +177,8 @@
                 if(item.exampleUrl) links.push(`<a href="${item.exampleUrl}" target="_blank">示例</a>`);
 
                 return `
-                <div class="card">
+                <div class="card ${type}">
+                    <span class="badge ${type}">${type === 'official' ? '官方' : '社区'}</span>
                     <img src="${imgSrc}" alt="${item.name}" onerror="this.style.display='none'">
                     <h3>${item.name}</h3>
                     <p>${item.desc}</p>
@@ -151,23 +189,28 @@
                 </div>`;
             }).join('');
 
-            renderPagination(total);
+            renderPagination(type, total, page);
         }
 
-        function renderPagination(total) {
-            const container = document.getElementById('pagination');
+        function renderPagination(type, total, page) {
+            const container = document.getElementById(type + 'Pagination');
             if (total <= 1) { container.innerHTML = ''; return; }
-            
-            let html = `<button onclick="renderPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
+            let html = `<button onclick="changePage('${type}', ${page - 1})" ${page === 1 ? 'disabled' : ''}>上一页</button>`;
             for (let i = 1; i <= total; i++) {
-                if (i === 1 || i === total || (i >= currentPage - 1 && i <= currentPage + 1)) {
-                    html += `<button onclick="renderPage(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
-                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                if (i === 1 || i === total || (i >= page - 1 && i <= page + 1)) {
+                    html += `<button onclick="changePage('${type}', ${i})" class="${i === page ? 'active' : ''}">${i}</button>`;
+                } else if (i === page - 2 || i === page + 2) {
                     html += `<span>...</span>`;
                 }
             }
-            html += `<button onclick="renderPage(${currentPage + 1})" ${currentPage === total ? 'disabled' : ''}>下一页</button>`;
+            html += `<button onclick="changePage('${type}', ${page + 1})" ${page === total ? 'disabled' : ''}>下一页</button>`;
             container.innerHTML = html;
+        }
+
+        function changePage(type, page) {
+            if (type === 'official') officialPage = page;
+            else communityPage = page;
+            renderSection(type);
         }
 
         init();
