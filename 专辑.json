@@ -3,7 +3,7 @@
     "albumId": "A001",
     "name": "前端精选",
     "desc": "收集优秀的前端项目资源",
-    "cover": "002.png",
+    "cover": "002.svg",
     "itemIds": ["001", "002"]
   }
 ]
