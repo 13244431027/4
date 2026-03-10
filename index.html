@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>资源库</title>
+    <meta name="description" content="开源资源库，收录优质项目">
     <style>
         :root {
             --primary: #2563eb;
@@ -16,22 +17,73 @@
             --text-light: #64748b;
             --border: #e2e8f0;
             --shadow: 0 1px 3px rgba(0,0,0,0.1);
-            --shadow-hover: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            --shadow-hover: 0 4px 6px -1px rgba(0,0,0,0.1);
             --radius: 12px;
             --radius-sm: 8px;
+        }
+
+        [data-theme="dark"] {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f1f5f9;
+            --text-light: #94a3b8;
+            --border: #334155;
+            --shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             max-width: 1200px;
             margin: 0 auto;
             padding: 30px 20px;
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
         }
+
+        /* 统计栏 */
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: var(--card-bg);
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            font-size: 0.9em;
+        }
+
+        .stat-item strong { color: var(--primary); font-size: 1.2em; }
+
+        /* 顶部工具栏 */
+        .toolbar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .toolbar button {
+            padding: 8px 16px;
+            border: 2px solid var(--border);
+            background: var(--card-bg);
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            font-size: 0.9em;
+            color: var(--text);
+            transition: all 0.2s;
+        }
+
+        .toolbar button:hover { border-color: var(--primary); color: var(--primary); }
 
         /* 标签页 */
         .tabs {
@@ -51,20 +103,11 @@
             font-size: 1em;
             font-weight: 500;
             color: var(--text);
-            transition: all 0.2s ease;
+            transition: all 0.2s;
         }
 
-        .tabs button:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        .tabs button.active {
-            background: var(--primary);
-            color: #fff;
-            border-color: var(--primary);
-            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
-        }
+        .tabs button:hover { border-color: var(--primary); color: var(--primary); }
+        .tabs button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
         /* 控制栏 */
         .controls {
@@ -75,27 +118,17 @@
             flex-wrap: wrap;
         }
 
-        .controls input,
-        .controls select {
+        .controls input, .controls select {
             padding: 12px 16px;
             border: 2px solid var(--border);
             border-radius: var(--radius-sm);
             font-size: 0.95em;
             background: var(--card-bg);
             color: var(--text);
-            transition: border-color 0.2s;
         }
 
-        .controls input:focus,
-        .controls select:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .controls input {
-            width: 100%;
-            max-width: 450px;
-        }
+        .controls input:focus, .controls select:focus { outline: none; border-color: var(--primary); }
+        .controls input { width: 100%; max-width: 450px; }
 
         .controls button {
             padding: 12px 20px;
@@ -104,34 +137,14 @@
             cursor: pointer;
             border-radius: var(--radius-sm);
             font-size: 0.95em;
-            font-weight: 500;
             color: var(--text);
-            transition: all 0.2s;
         }
 
-        .controls button:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
+        .controls button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .controls select:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .controls button.active {
-            background: var(--primary);
-            color: #fff;
-            border-color: var(--primary);
-        }
-
-        .controls select:disabled,
-        .controls button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* 网格布局 */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 24px;
-        }
+        /* 网格 */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
 
         /* 卡片 */
         .card {
@@ -141,264 +154,122 @@
             box-shadow: var(--shadow);
             display: flex;
             flex-direction: column;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
             border: 1px solid var(--border);
             overflow: hidden;
+            animation: fadeIn 0.3s ease;
         }
 
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-hover);
-        }
-
-        .card img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            border-radius: var(--radius-sm);
-            background: linear-gradient(135deg, #e0e7ff 0%, #f0f9ff 100%);
-            margin-bottom: 16px;
-        }
-
-        .card h3 {
-            margin: 0 0 8px;
-            font-size: 1.15em;
-            font-weight: 600;
-            color: var(--text);
-            line-height: 1.4;
-        }
-
-        .card p {
-            font-size: 0.9em;
-            color: var(--text-light);
-            flex-grow: 1;
-            line-height: 1.6;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin: 12px 0;
-        }
-
-        .tags span {
-            background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%);
-            color: var(--primary);
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.75em;
-            font-weight: 500;
-        }
-
-        .authors {
-            margin: 12px 0;
-            font-size: 0.85em;
-            color: var(--text-light);
-        }
-
-        .authors a {
-            color: var(--primary);
-            text-decoration: none;
-            margin-right: 10px;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-
-        .authors a:hover {
-            color: var(--primary-hover);
-            text-decoration: underline;
-        }
-
-        .links {
-            display: flex;
-            gap: 8px;
-            margin-top: 16px;
-            flex-wrap: wrap;
-        }
-
-        .links a {
-            flex: 1;
-            min-width: 70px;
-            text-align: center;
-            padding: 8px 12px;
-            background: linear-gradient(135deg, var(--text) 0%, #334155 100%);
-            color: #fff;
-            text-decoration: none;
-            border-radius: var(--radius-sm);
-            font-size: 0.8em;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .links a:hover {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
-            transform: translateY(-1px);
-        }
+        .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); }
+        .card img { width: 100%; height: 180px; object-fit: cover; border-radius: var(--radius-sm); background: linear-gradient(135deg, #e0e7ff 0%, #f0f9ff 100%); margin-bottom: 16px; }
+        .card h3 { margin: 0 0 8px; font-size: 1.15em; font-weight: 600; }
+        .card p { font-size: 0.9em; color: var(--text-light); flex-grow: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+        .tags span { background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-size: 0.75em; }
+        .authors { margin: 12px 0; font-size: 0.85em; color: var(--text-light); }
+        .authors a { color: var(--primary); text-decoration: none; margin-right: 10px; }
+        .authors a:hover { text-decoration: underline; }
+        .links { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+        .links a { flex: 1; min-width: 70px; text-align: center; padding: 8px 12px; background: var(--text); color: #fff; text-decoration: none; border-radius: var(--radius-sm); font-size: 0.8em; }
+        .links a:hover { background: var(--primary); }
 
         /* 专辑卡片 */
-        .album-card {
-            cursor: pointer;
-            position: relative;
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        }
-
-        .album-card:hover {
-            border-color: var(--primary);
-        }
-
-        .album-card img {
-            display: block;
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-        }
-
-        .album-count {
-            font-size: 0.8em;
-            color: var(--text-light);
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px solid var(--border);
-        }
+        .album-card { cursor: pointer; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); }
+        .album-card:hover { border-color: var(--primary); }
+        .album-count { font-size: 0.8em; color: var(--text-light); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
 
         /* 分页 */
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 40px;
-            flex-wrap: wrap;
-        }
-
-        .pagination button {
-            min-width: 40px;
-            height: 40px;
-            padding: 0 16px;
-            border: 2px solid var(--border);
-            background: var(--card-bg);
-            cursor: pointer;
-            border-radius: var(--radius-sm);
-            font-size: 0.9em;
-            font-weight: 500;
-            color: var(--text);
-            transition: all 0.2s;
-        }
-
-        .pagination button:hover:not(:disabled) {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        .pagination button.active {
-            background: var(--primary);
-            color: #fff;
-            border-color: var(--primary);
-        }
-
-        .pagination button:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        .pagination span {
-            display: flex;
-            align-items: center;
-            color: var(--text-light);
-            padding: 0 8px;
-        }
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 40px; flex-wrap: wrap; }
+        .pagination button { min-width: 40px; height: 40px; padding: 0 16px; border: 2px solid var(--border); background: var(--card-bg); cursor: pointer; border-radius: var(--radius-sm); font-size: 0.9em; }
+        .pagination button:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+        .pagination button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
 
         /* 面包屑 */
-        .breadcrumb {
-            margin-bottom: 20px;
-            font-size: 0.95em;
-        }
-
-        .breadcrumb a {
-            color: var(--primary);
-            text-decoration: none;
-            cursor: pointer;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-
-        .breadcrumb a:hover {
-            color: var(--primary-hover);
-            text-decoration: underline;
-        }
-
-        .breadcrumb span {
-            color: var(--text-light);
-            margin: 0 8px;
-        }
+        .breadcrumb { margin-bottom: 20px; font-size: 0.95em; }
+        .breadcrumb a { color: var(--primary); text-decoration: none; cursor: pointer; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb span { color: var(--text-light); margin: 0 8px; }
 
         /* 专辑详情头 */
-        #albumDetailHeader {
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            padding: 24px;
-            border-radius: var(--radius);
-            margin-bottom: 24px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-        }
-
-        #albumDetailHeader h2 {
-            margin: 0 0 12px;
-            font-size: 1.5em;
-            color: var(--text);
-        }
-
-        #albumDetailHeader p {
-            color: var(--text-light);
-            margin: 0;
-        }
+        #albumDetailHeader { background: var(--card-bg); padding: 24px; border-radius: var(--radius); margin-bottom: 24px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        #albumDetailHeader h2 { margin: 0 0 12px; font-size: 1.5em; }
+        #albumDetailHeader p { color: var(--text-light); }
 
         /* 隐藏 */
         .hidden { display: none !important; }
 
         /* 空状态 */
-        .empty-state {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-light);
-            font-size: 1.1em;
+        .empty-state { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-light); font-size: 1.1em; }
+
+        /* 骨架屏 */
+        .skeleton { background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: var(--radius-sm); }
+        .skeleton-img { height: 180px; margin-bottom: 16px; }
+        .skeleton-text { height: 20px; margin-bottom: 8px; }
+        .skeleton-text.short { width: 60%; }
+
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 返回顶部 */
+        #backToTop {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+            font-size: 1.5em;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 1000;
         }
+
+        #backToTop:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5); }
+        #backToTop.show { display: flex; }
 
         /* 响应式 */
         @media (max-width: 768px) {
             body { padding: 20px 15px; }
             .grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
-            .tabs button { padding: 10px 20px; font-size: 0.9em; }
             .controls { flex-direction: column; align-items: stretch; }
             .controls input { max-width: 100%; }
-            .card img { height: 160px; }
         }
 
         @media (max-width: 480px) {
             .grid { grid-template-columns: 1fr; }
-            .tabs { gap: 8px; }
-            .tabs button { padding: 10px 16px; }
-            .links a { min-width: 60px; padding: 6px 10px; font-size: 0.75em; }
+            .stats { gap: 15px; }
+            .stat-item { padding: 10px 16px; }
         }
-
-        /* 加载动画 */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .card { animation: fadeIn 0.3s ease; }
     </style>
 </head>
 <body>
+    <!-- 统计栏 -->
+    <div class="stats">
+        <div class="stat-item">📦 资源总数：<strong id="statItems">0</strong></div>
+        <div class="stat-item">📚 专辑总数：<strong id="statAlbums">0</strong></div>
+        <div class="stat-item">👤 作者总数：<strong id="statAuthors">0</strong></div>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button onclick="toggleTheme()" id="themeBtn">🌙 深色</button>
+    </div>
+
+    <!-- 标签页 -->
     <div class="tabs">
         <button id="tabAll" class="active" onclick="switchTab('all')">全部资源</button>
         <button id="tabAlbum" onclick="switchTab('album')">专辑</button>
     </div>
 
+    <!-- 全部资源视图 -->
     <div id="viewAll">
         <div class="controls">
             <input type="text" id="searchInput" placeholder="🔍 搜索名称、介绍、标签、作者..." oninput="handleSearch()">
@@ -412,6 +283,7 @@
         <div id="pagination" class="pagination"></div>
     </div>
 
+    <!-- 专辑列表视图 -->
     <div id="viewAlbumList" class="hidden">
         <div class="controls">
             <input type="text" id="albumSearchInput" placeholder="🔍 搜索专辑名称、介绍..." oninput="handleAlbumSearch()">
@@ -420,6 +292,7 @@
         <div id="albumPagination" class="pagination"></div>
     </div>
 
+    <!-- 专辑详情视图 -->
     <div id="viewAlbumDetail" class="hidden">
         <div class="breadcrumb">
             <a onclick="switchTab('album')">📁 专辑</a>
@@ -430,6 +303,9 @@
         <div id="albumDetailGrid" class="grid"></div>
         <div id="albumDetailPagination" class="pagination"></div>
     </div>
+
+    <!-- 返回顶部 -->
+    <button id="backToTop" onclick="scrollToTop()">⬆️</button>
 
     <script>
         const ITEMS_PER_PAGE = 20;
@@ -444,8 +320,54 @@
         let currentAlbumDetail = null;
         let albumDetailData = [];
         let albumDetailPage = 1;
+        let searchTimer = null;
+
+        // 初始化主题
+        function initTheme() {
+            const saved = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            updateThemeBtn(saved);
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.getAttribute('data-theme') === 'dark';
+            const newTheme = isDark ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeBtn(newTheme);
+        }
+
+        function updateThemeBtn(theme) {
+            document.getElementById('themeBtn').innerText = theme === 'dark' ? '☀️ 浅色' : '🌙 深色';
+        }
+
+        // 返回顶部
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.addEventListener('scroll', () => {
+            const btn = document.getElementById('backToTop');
+            if (window.scrollY > 300) btn.classList.add('show');
+            else btn.classList.remove('show');
+        });
+
+        // 骨架屏
+        function showSkeleton(count = 8) {
+            const container = document.getElementById('app');
+            container.innerHTML = Array(count).fill(0).map(() => `
+                <div class="card">
+                    <div class="skeleton skeleton-img"></div>
+                    <div class="skeleton skeleton-text" style="width: 80%"></div>
+                    <div class="skeleton skeleton-text"></div>
+                    <div class="skeleton skeleton-text short"></div>
+                </div>
+            `).join('');
+        }
 
         async function init() {
+            showSkeleton();
             try {
                 const [resData, resAlbums] = await Promise.all([
                     fetch('信息.json'),
@@ -453,6 +375,13 @@
                 ]);
                 allData = await resData.json();
                 albums = await resAlbums.json();
+                
+                // 更新统计
+                document.getElementById('statItems').innerText = allData.length;
+                document.getElementById('statAlbums').innerText = albums.length;
+                const authors = new Set(allData.flatMap(i => i.authors.map(a => a.name)));
+                document.getElementById('statAuthors').innerText = authors.size;
+
                 displayData = [...allData];
                 displayAlbums = [...albums];
                 applyFiltersAndSort();
@@ -471,11 +400,16 @@
             document.getElementById('viewAlbumList').classList.toggle('hidden', tab !== 'album');
             document.getElementById('viewAlbumDetail').classList.add('hidden');
             currentAlbumDetail = null;
+            scrollToTop();
         }
 
+        // 搜索防抖
         function handleSearch() {
-            currentPage = 1;
-            applyFiltersAndSort();
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                currentPage = 1;
+                applyFiltersAndSort();
+            }, 300);
         }
 
         function handleSort() {
@@ -518,9 +452,8 @@
                 item.tags.some(t => t.toLowerCase().includes(query)) ||
                 item.authors.some(a => a.name.toLowerCase().includes(query))
             );
-            if (isExploreMode) {
-                shuffle(displayData);
-            } else {
+            if (isExploreMode) shuffle(displayData);
+            else {
                 displayData.sort((a, b) => {
                     const timeA = new Date(a.uploadTime).getTime();
                     const timeB = new Date(b.uploadTime).getTime();
@@ -565,12 +498,15 @@
         }
 
         function handleAlbumSearch() {
-            const query = document.getElementById('albumSearchInput').value.toLowerCase().trim();
-            displayAlbums = albums.filter(album => 
-                album.name.toLowerCase().includes(query) ||
-                album.desc.toLowerCase().includes(query)
-            );
-            renderAlbumList();
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                const query = document.getElementById('albumSearchInput').value.toLowerCase().trim();
+                displayAlbums = albums.filter(album => 
+                    album.name.toLowerCase().includes(query) ||
+                    album.desc.toLowerCase().includes(query)
+                );
+                renderAlbumList();
+            }, 300);
         }
 
         function renderAlbumList() {
@@ -611,6 +547,7 @@
             `;
             albumDetailPage = 1;
             renderAlbumDetail();
+            scrollToTop();
         }
 
         function renderAlbumDetail() {
@@ -658,6 +595,8 @@
             container.innerHTML = html;
         }
 
+        // 初始化
+        initTheme();
         init();
     </script>
 </body>
