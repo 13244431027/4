@@ -5,39 +5,392 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>资源库</title>
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
-        .tabs button { padding: 10px 30px; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 4px; font-size: 1em; }
-        .tabs button.active { background: #333; color: #fff; border-color: #333; }
-        .controls { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
-        .controls input, .controls select, .controls button { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        .controls input { width: 60%; max-width: 400px; }
-        .controls button { cursor: pointer; background: #fff; transition: 0.2s; }
-        .controls button.active { background: #0066cc; color: #fff; border-color: #0066cc; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .card { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
-        .card img { width: 100%; height: 160px; object-fit: cover; border-radius: 4px; background: #eee; }
-        .card h3 { margin: 10px 0 5px; font-size: 1.1em; }
-        .card p { font-size: 0.9em; color: #666; flex-grow: 1; }
-        .tags span { background: #e0f0ff; color: #0066cc; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-right: 5px; }
-        .authors { margin: 10px 0; font-size: 0.85em; }
-        .authors a { color: #555; text-decoration: none; margin-right: 8px; }
-        .links { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
-        .links a { flex: 1; min-width: 60px; text-align: center; padding: 5px; background: #333; color: #fff; text-decoration: none; border-radius: 4px; font-size: 0.8em; }
-        /* 专辑卡片特殊样式 */
-        .album-card { cursor: pointer; transition: transform 0.2s; position: relative; overflow: hidden; background: #f9f9f9; }
-        .album-card:hover { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
-        .album-card img { display: block; }
-        .album-count { font-size: 0.8em; color: #999; margin-top: 5px; }
-        .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 30px; }
-        .pagination button { padding: 8px 16px; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 4px; }
-        .pagination button.active { background: #333; color: #fff; border-color: #333; }
-        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .breadcrumb { margin-bottom: 15px; }
-        .breadcrumb a { color: #0066cc; text-decoration: none; cursor: pointer; }
-        .breadcrumb span { color: #999; margin: 0 5px; }
-        .hidden { display: none; }
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --secondary: #64748b;
+            --success: #10b981;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-hover: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* 标签页 */
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .tabs button {
+            padding: 12px 32px;
+            border: 2px solid var(--border);
+            background: var(--card-bg);
+            cursor: pointer;
+            border-radius: var(--radius);
+            font-size: 1em;
+            font-weight: 500;
+            color: var(--text);
+            transition: all 0.2s ease;
+        }
+
+        .tabs button:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .tabs button.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+        }
+
+        /* 控制栏 */
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .controls input,
+        .controls select {
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.95em;
+            background: var(--card-bg);
+            color: var(--text);
+            transition: border-color 0.2s;
+        }
+
+        .controls input:focus,
+        .controls select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .controls input {
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .controls button {
+            padding: 12px 20px;
+            border: 2px solid var(--border);
+            background: var(--card-bg);
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            font-size: 0.95em;
+            font-weight: 500;
+            color: var(--text);
+            transition: all 0.2s;
+        }
+
+        .controls button:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .controls button.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        .controls select:disabled,
+        .controls button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 网格布局 */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        /* 卡片 */
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, #e0e7ff 0%, #f0f9ff 100%);
+            margin-bottom: 16px;
+        }
+
+        .card h3 {
+            margin: 0 0 8px;
+            font-size: 1.15em;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.4;
+        }
+
+        .card p {
+            font-size: 0.9em;
+            color: var(--text-light);
+            flex-grow: 1;
+            line-height: 1.6;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 12px 0;
+        }
+
+        .tags span {
+            background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%);
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 500;
+        }
+
+        .authors {
+            margin: 12px 0;
+            font-size: 0.85em;
+            color: var(--text-light);
+        }
+
+        .authors a {
+            color: var(--primary);
+            text-decoration: none;
+            margin-right: 10px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .authors a:hover {
+            color: var(--primary-hover);
+            text-decoration: underline;
+        }
+
+        .links {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .links a {
+            flex: 1;
+            min-width: 70px;
+            text-align: center;
+            padding: 8px 12px;
+            background: linear-gradient(135deg, var(--text) 0%, #334155 100%);
+            color: #fff;
+            text-decoration: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.8em;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .links a:hover {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+            transform: translateY(-1px);
+        }
+
+        /* 专辑卡片 */
+        .album-card {
+            cursor: pointer;
+            position: relative;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        }
+
+        .album-card:hover {
+            border-color: var(--primary);
+        }
+
+        .album-card img {
+            display: block;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        }
+
+        .album-count {
+            font-size: 0.8em;
+            color: var(--text-light);
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* 分页 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+
+        .pagination button {
+            min-width: 40px;
+            height: 40px;
+            padding: 0 16px;
+            border: 2px solid var(--border);
+            background: var(--card-bg);
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            font-size: 0.9em;
+            font-weight: 500;
+            color: var(--text);
+            transition: all 0.2s;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .pagination button.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .pagination span {
+            display: flex;
+            align-items: center;
+            color: var(--text-light);
+            padding: 0 8px;
+        }
+
+        /* 面包屑 */
+        .breadcrumb {
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+
+        .breadcrumb a {
+            color: var(--primary);
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .breadcrumb a:hover {
+            color: var(--primary-hover);
+            text-decoration: underline;
+        }
+
+        .breadcrumb span {
+            color: var(--text-light);
+            margin: 0 8px;
+        }
+
+        /* 专辑详情头 */
+        #albumDetailHeader {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            padding: 24px;
+            border-radius: var(--radius);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        #albumDetailHeader h2 {
+            margin: 0 0 12px;
+            font-size: 1.5em;
+            color: var(--text);
+        }
+
+        #albumDetailHeader p {
+            color: var(--text-light);
+            margin: 0;
+        }
+
+        /* 隐藏 */
+        .hidden { display: none !important; }
+
+        /* 空状态 */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-light);
+            font-size: 1.1em;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            body { padding: 20px 15px; }
+            .grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+            .tabs button { padding: 10px 20px; font-size: 0.9em; }
+            .controls { flex-direction: column; align-items: stretch; }
+            .controls input { max-width: 100%; }
+            .card img { height: 160px; }
+        }
+
+        @media (max-width: 480px) {
+            .grid { grid-template-columns: 1fr; }
+            .tabs { gap: 8px; }
+            .tabs button { padding: 10px 16px; }
+            .links a { min-width: 60px; padding: 6px 10px; font-size: 0.75em; }
+        }
+
+        /* 加载动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card { animation: fadeIn 0.3s ease; }
     </style>
 </head>
 <body>
@@ -48,12 +401,12 @@
 
     <div id="viewAll">
         <div class="controls">
-            <input type="text" id="searchInput" placeholder="搜索名称、介绍、标签、作者..." oninput="handleSearch()">
+            <input type="text" id="searchInput" placeholder="🔍 搜索名称、介绍、标签、作者..." oninput="handleSearch()">
             <select id="sortSelect" onchange="handleSort()">
-                <option value="newest">最新上传</option>
-                <option value="oldest">最旧上传</option>
+                <option value="newest">📅 最新上传</option>
+                <option value="oldest">📅 最旧上传</option>
             </select>
-            <button id="exploreBtn" onclick="toggleExplore()">🔍 探索模式</button>
+            <button id="exploreBtn" onclick="toggleExplore()">🎲 探索模式</button>
         </div>
         <div id="app" class="grid"></div>
         <div id="pagination" class="pagination"></div>
@@ -61,7 +414,7 @@
 
     <div id="viewAlbumList" class="hidden">
         <div class="controls">
-            <input type="text" id="albumSearchInput" placeholder="搜索专辑名称、介绍..." oninput="handleAlbumSearch()">
+            <input type="text" id="albumSearchInput" placeholder="🔍 搜索专辑名称、介绍..." oninput="handleAlbumSearch()">
         </div>
         <div id="albumGrid" class="grid"></div>
         <div id="albumPagination" class="pagination"></div>
@@ -69,9 +422,11 @@
 
     <div id="viewAlbumDetail" class="hidden">
         <div class="breadcrumb">
-            <a onclick="switchTab('album')">专辑</a> <span>></span> <span id="albumDetailTitle"></span>
+            <a onclick="switchTab('album')">📁 专辑</a>
+            <span>/</span>
+            <span id="albumDetailTitle"></span>
         </div>
-        <div id="albumDetailHeader" style="background:#fff;padding:20px;border-radius:8px;margin-bottom:20px;box-shadow:0 2px 5px rgba(0,0,0,0.1);"></div>
+        <div id="albumDetailHeader"></div>
         <div id="albumDetailGrid" class="grid"></div>
         <div id="albumDetailPagination" class="pagination"></div>
     </div>
@@ -103,7 +458,7 @@
                 applyFiltersAndSort();
                 renderAlbumList();
             } catch (e) {
-                document.getElementById('app').innerHTML = '<p>加载失败，请检查 JSON 文件</p>';
+                document.getElementById('app').innerHTML = '<div class="empty-state">⚠️ 加载失败，请检查 JSON 文件</div>';
                 console.error(e);
             }
         }
@@ -140,7 +495,7 @@
                 sortSelect.disabled = true;
             } else {
                 btn.classList.remove('active');
-                btn.innerText = '🔍 探索模式';
+                btn.innerText = '🎲 探索模式';
                 sortSelect.disabled = false;
             }
             currentPage = 1;
@@ -182,7 +537,7 @@
             const total = Math.ceil(displayData.length / ITEMS_PER_PAGE);
             const container = document.getElementById('app');
             if (data.length === 0) {
-                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">无匹配结果</p>';
+                container.innerHTML = '<div class="empty-state">😕 无匹配结果</div>';
                 document.getElementById('pagination').innerHTML = '';
                 return;
             }
@@ -193,19 +548,19 @@
         function renderItemCard(item) {
             const imgSrc = item.image ? `封面/${item.image}` : `封面/${item.id}.png`;
             const links = [];
-            if(item.fileUrl) links.push(`<a href="${item.fileUrl}" target="_blank">文件</a>`);
-            if(item.docUrl) links.push(`<a href="${item.docUrl}" target="_blank">文档 1</a>`);
-            if(item.docUrl2) links.push(`<a href="${item.docUrl2}" target="_blank">文档 2</a>`);
-            if(item.exampleUrl) links.push(`<a href="${item.exampleUrl}" target="_blank">示例</a>`);
+            if(item.fileUrl) links.push(`<a href="${item.fileUrl}" target="_blank">📁 文件</a>`);
+            if(item.docUrl) links.push(`<a href="${item.docUrl}" target="_blank">📄 文档 1</a>`);
+            if(item.docUrl2) links.push(`<a href="${item.docUrl2}" target="_blank">📄 文档 2</a>`);
+            if(item.exampleUrl) links.push(`<a href="${item.exampleUrl}" target="_blank">🚀 示例</a>`);
             return `
             <div class="card">
                 <img src="${imgSrc}" alt="${item.name}" onerror="this.style.display='none'">
                 <h3>${item.name}</h3>
                 <p>${item.desc}</p>
                 <div class="tags">${item.tags.map(t => `<span>#${t}</span>`).join('')}</div>
-                <div class="authors">作者：${item.authors.map(a => `<a href="${a.url}" target="_blank">${a.name}</a>`).join(' ')}</div>
+                <div class="authors">👤 ${item.authors.map(a => `<a href="${a.url}" target="_blank">${a.name}</a>`).join(' ')}</div>
                 <div class="links">${links.join('')}</div>
-                <div style="font-size:0.7em;color:#999;margin-top:5px;">${item.uploadTime}</div>
+                <div style="font-size:0.75em;color:var(--text-light);margin-top:12px;">📅 ${item.uploadTime}</div>
             </div>`;
         }
 
@@ -224,20 +579,19 @@
             const start = (currentPage - 1) * ITEMS_PER_PAGE;
             const data = displayAlbums.slice(start, start + ITEMS_PER_PAGE);
             if (data.length === 0) {
-                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">无匹配专辑</p>';
+                container.innerHTML = '<div class="empty-state">😕 无匹配专辑</div>';
                 document.getElementById('albumPagination').innerHTML = '';
                 return;
             }
             container.innerHTML = data.map(album => {
-                // 修复：只有存在 cover 字段才设置 src，否则依赖背景色
                 const coverSrc = album.cover ? `封面/${album.cover}` : '';
                 const imgTag = coverSrc ? `<img src="${coverSrc}" alt="${album.name}" onerror="this.style.display='none'">` : '';
                 return `
                 <div class="card album-card" onclick="openAlbumDetail('${album.albumId}')">
                     ${imgTag}
-                    <h3>${album.name}</h3>
+                    <h3>📚 ${album.name}</h3>
                     <p>${album.desc}</p>
-                    <div class="album-count">包含 ${album.itemIds.length} 个资源</div>
+                    <div class="album-count">📦 包含 ${album.itemIds.length} 个资源</div>
                 </div>`;
             }).join('');
             renderPagination('albumPagination', total);
@@ -251,9 +605,9 @@
             document.getElementById('viewAlbumDetail').classList.remove('hidden');
             document.getElementById('albumDetailTitle').innerText = album.name;
             document.getElementById('albumDetailHeader').innerHTML = `
-                <h2 style="margin:0 0 10px;">${album.name}</h2>
-                <p style="color:#666;margin:0;">${album.desc}</p>
-                <div style="margin-top:10px;color:#999;font-size:0.9em;">包含 ${album.itemIds.length} 个资源</div>
+                <h2>📚 ${album.name}</h2>
+                <p>${album.desc}</p>
+                <div style="margin-top:12px;color:var(--text-light);font-size:0.9em;">📦 包含 ${album.itemIds.length} 个资源</div>
             `;
             albumDetailPage = 1;
             renderAlbumDetail();
@@ -267,7 +621,7 @@
             const start = (albumDetailPage - 1) * ITEMS_PER_PAGE;
             const data = albumDetailData.slice(start, start + ITEMS_PER_PAGE);
             if (data.length === 0) {
-                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">该专辑暂无资源</p>';
+                container.innerHTML = '<div class="empty-state">😕 该专辑暂无资源</div>';
                 document.getElementById('albumDetailPagination').innerHTML = '';
                 return;
             }
@@ -292,7 +646,7 @@
                 pageFunc = 'renderPage(currentPage)';
                 currentPageVal = currentPage;
             }
-            let html = `<button onclick="${pageVar}=${currentPageVal-1};${pageFunc}" ${currentPageVal === 1 ? 'disabled' : ''}>上一页</button>`;
+            let html = `<button onclick="${pageVar}=${currentPageVal-1};${pageFunc}" ${currentPageVal === 1 ? 'disabled' : ''}>⬅️</button>`;
             for (let i = 1; i <= total; i++) {
                 if (i === 1 || i === total || (i >= currentPageVal - 1 && i <= currentPageVal + 1)) {
                     html += `<button onclick="${pageVar}=${i};${pageFunc}" class="${i === currentPageVal ? 'active' : ''}">${i}</button>`;
@@ -300,7 +654,7 @@
                     html += `<span>...</span>`;
                 }
             }
-            html += `<button onclick="${pageVar}=${currentPageVal+1};${pageFunc}" ${currentPageVal === total ? 'disabled' : ''}>下一页</button>`;
+            html += `<button onclick="${pageVar}=${currentPageVal+1};${pageFunc}" ${currentPageVal === total ? 'disabled' : ''}>➡️</button>`;
             container.innerHTML = html;
         }
 
