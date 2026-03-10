@@ -25,8 +25,10 @@
         .authors a { color: #555; text-decoration: none; margin-right: 8px; }
         .links { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
         .links a { flex: 1; min-width: 60px; text-align: center; padding: 5px; background: #333; color: #fff; text-decoration: none; border-radius: 4px; font-size: 0.8em; }
-        .album-card { cursor: pointer; transition: transform 0.2s; }
+        /* 专辑卡片特殊样式 */
+        .album-card { cursor: pointer; transition: transform 0.2s; position: relative; overflow: hidden; background: #f9f9f9; }
         .album-card:hover { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .album-card img { display: block; }
         .album-count { font-size: 0.8em; color: #999; margin-top: 5px; }
         .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 30px; }
         .pagination button { padding: 8px 16px; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 4px; }
@@ -39,13 +41,11 @@
     </style>
 </head>
 <body>
-    <!-- 主标签页 -->
     <div class="tabs">
         <button id="tabAll" class="active" onclick="switchTab('all')">全部资源</button>
         <button id="tabAlbum" onclick="switchTab('album')">专辑</button>
     </div>
 
-    <!-- 全部资源视图 -->
     <div id="viewAll">
         <div class="controls">
             <input type="text" id="searchInput" placeholder="搜索名称、介绍、标签、作者..." oninput="handleSearch()">
@@ -59,7 +59,6 @@
         <div id="pagination" class="pagination"></div>
     </div>
 
-    <!-- 专辑列表视图 -->
     <div id="viewAlbumList" class="hidden">
         <div class="controls">
             <input type="text" id="albumSearchInput" placeholder="搜索专辑名称、介绍..." oninput="handleAlbumSearch()">
@@ -68,7 +67,6 @@
         <div id="albumPagination" class="pagination"></div>
     </div>
 
-    <!-- 专辑详情视图 -->
     <div id="viewAlbumDetail" class="hidden">
         <div class="breadcrumb">
             <a onclick="switchTab('album')">专辑</a> <span>></span> <span id="albumDetailTitle"></span>
@@ -120,7 +118,6 @@
             currentAlbumDetail = null;
         }
 
-        // ========== 全部资源逻辑 ==========
         function handleSearch() {
             currentPage = 1;
             applyFiltersAndSort();
@@ -197,8 +194,8 @@
             const imgSrc = item.image ? `封面/${item.image}` : `封面/${item.id}.png`;
             const links = [];
             if(item.fileUrl) links.push(`<a href="${item.fileUrl}" target="_blank">文件</a>`);
-            if(item.docUrl) links.push(`<a href="${item.docUrl}" target="_blank">文档1</a>`);
-            if(item.docUrl2) links.push(`<a href="${item.docUrl2}" target="_blank">文档2</a>`);
+            if(item.docUrl) links.push(`<a href="${item.docUrl}" target="_blank">文档 1</a>`);
+            if(item.docUrl2) links.push(`<a href="${item.docUrl2}" target="_blank">文档 2</a>`);
             if(item.exampleUrl) links.push(`<a href="${item.exampleUrl}" target="_blank">示例</a>`);
             return `
             <div class="card">
@@ -212,7 +209,6 @@
             </div>`;
         }
 
-        // ========== 专辑列表逻辑 ==========
         function handleAlbumSearch() {
             const query = document.getElementById('albumSearchInput').value.toLowerCase().trim();
             displayAlbums = albums.filter(album => 
@@ -233,10 +229,12 @@
                 return;
             }
             container.innerHTML = data.map(album => {
+                // 修复：只有存在 cover 字段才设置 src，否则依赖背景色
                 const coverSrc = album.cover ? `封面/${album.cover}` : '';
+                const imgTag = coverSrc ? `<img src="${coverSrc}" alt="${album.name}" onerror="this.style.display='none'">` : '';
                 return `
                 <div class="card album-card" onclick="openAlbumDetail('${album.albumId}')">
-                    <img src="${coverSrc}" alt="${album.name}" onerror="this.style.background='#dee'">
+                    ${imgTag}
                     <h3>${album.name}</h3>
                     <p>${album.desc}</p>
                     <div class="album-count">包含 ${album.itemIds.length} 个资源</div>
@@ -245,7 +243,6 @@
             renderPagination('albumPagination', total);
         }
 
-        // ========== 专辑详情逻辑 ==========
         function openAlbumDetail(albumId) {
             const album = albums.find(a => a.albumId === albumId);
             if (!album) return;
@@ -278,7 +275,6 @@
             renderPagination('albumDetailPagination', total);
         }
 
-        // ========== 通用分页 ==========
         function renderPagination(containerId, total) {
             const container = document.getElementById(containerId);
             if (total <= 1) { container.innerHTML = ''; return; }
