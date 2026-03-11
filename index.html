@@ -40,7 +40,6 @@
             line-height: 1.6;
         }
 
-        /* ========== 动画 ========== */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -56,17 +55,6 @@
             to { opacity: 1; transform: scale(1); }
         }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-
         @keyframes copySuccess {
             0% { transform: scale(1); }
             50% { transform: scale(1.2); }
@@ -77,7 +65,6 @@
         .animate-slide { animation: slideIn 0.3s ease forwards; }
         .animate-scale { animation: scaleIn 0.3s ease forwards; }
 
-        /* ========== 标签页 ========== */
         .tabs {
             display: flex;
             gap: 12px;
@@ -130,7 +117,6 @@
             transform: translateY(-2px);
         }
 
-        /* ========== 控制栏 ========== */
         .controls {
             display: flex;
             gap: 12px;
@@ -196,14 +182,12 @@
             transform: none;
         }
 
-        /* ========== 网格布局 ========== */
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 24px;
         }
 
-        /* ========== 卡片 ========== */
         .card {
             background: var(--card-bg);
             padding: 20px;
@@ -283,6 +267,7 @@
         .card-action-btn.favorite.active {
             background: var(--danger);
             color: #fff;
+            animation: pulse 0.3s ease;
         }
 
         .card-action-btn.copy:hover {
@@ -387,7 +372,21 @@
             align-items: center;
         }
 
-        /* ========== 专辑卡片 ========== */
+        .card-meta .copy-link-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1em;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+
+        .card-meta .copy-link-btn:hover {
+            background: var(--primary-light);
+            transform: scale(1.1);
+        }
+
         .album-card {
             cursor: pointer;
             position: relative;
@@ -410,7 +409,6 @@
             border-top: 1px solid var(--border);
         }
 
-        /* ========== 分页 ========== */
         .pagination {
             display: flex;
             justify-content: center;
@@ -460,7 +458,6 @@
             padding: 0 8px;
         }
 
-        /* ========== 面包屑 ========== */
         .breadcrumb {
             margin-bottom: 20px;
             font-size: 0.95em;
@@ -485,7 +482,6 @@
             margin: 0 8px;
         }
 
-        /* ========== 专辑详情头 ========== */
         #albumDetailHeader {
             background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
             padding: 24px;
@@ -507,10 +503,8 @@
             margin: 0;
         }
 
-        /* ========== 隐藏 ========== */
         .hidden { display: none !important; }
 
-        /* ========== 空状态 ========== */
         .empty-state {
             grid-column: 1 / -1;
             text-align: center;
@@ -526,7 +520,6 @@
             display: block;
         }
 
-        /* ========== Toast 提示 ========== */
         .toast {
             position: fixed;
             bottom: 30px;
@@ -555,7 +548,6 @@
         .toast.error { background: var(--danger); }
         .toast.warning { background: var(--warning); }
 
-        /* ========== 收藏计数 ========== */
         .favorite-count {
             background: var(--danger-light);
             color: var(--danger);
@@ -566,7 +558,6 @@
             margin-left: 8px;
         }
 
-        /* ========== 响应式 ========== */
         @media (max-width: 768px) {
             body { padding: 20px 15px; }
             .grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
@@ -585,21 +576,16 @@
             .card-action-btn { width: 32px; height: 32px; }
         }
 
-        /* ========== 复制成功动画 ========== */
-        .copy-success {
-            animation: copySuccess 0.3s ease;
-        }
+        .copy-success { animation: copySuccess 0.3s ease; }
     </style>
 </head>
 <body>
-    <!-- 标签页 -->
     <div class="tabs">
         <button id="tabAll" class="active" onclick="switchTab('all')">📚 全部资源</button>
         <button id="tabAlbum" onclick="switchTab('album')">📁 专辑</button>
         <button id="tabFavorite" onclick="switchTab('favorite')">❤️ 收藏<span id="favoriteCount" class="favorite-count">0</span></button>
     </div>
 
-    <!-- 全部资源视图 -->
     <div id="viewAll">
         <div class="controls">
             <input type="text" id="searchInput" placeholder="🔍 搜索名称、介绍、标签、作者..." oninput="handleSearch()">
@@ -613,7 +599,6 @@
         <div id="pagination" class="pagination"></div>
     </div>
 
-    <!-- 专辑列表视图 -->
     <div id="viewAlbumList" class="hidden">
         <div class="controls">
             <input type="text" id="albumSearchInput" placeholder="🔍 搜索专辑名称、介绍..." oninput="handleAlbumSearch()">
@@ -622,7 +607,6 @@
         <div id="albumPagination" class="pagination"></div>
     </div>
 
-    <!-- 专辑详情视图 -->
     <div id="viewAlbumDetail" class="hidden">
         <div class="breadcrumb">
             <a onclick="switchTab('album')">📁 专辑</a>
@@ -634,7 +618,6 @@
         <div id="albumDetailPagination" class="pagination"></div>
     </div>
 
-    <!-- 收藏视图 -->
     <div id="viewFavorite" class="hidden">
         <div class="controls">
             <input type="text" id="favoriteSearchInput" placeholder="🔍 搜索收藏的资源..." oninput="handleFavoriteSearch()">
@@ -643,7 +626,6 @@
         <div id="favoritePagination" class="pagination"></div>
     </div>
 
-    <!-- Toast 提示 -->
     <div id="toast" class="toast">
         <span id="toastIcon">✓</span>
         <span id="toastMessage">操作成功</span>
@@ -662,9 +644,18 @@
         let currentAlbumDetail = null;
         let albumDetailData = [];
         let albumDetailPage = 1;
-        let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
         let favoriteDisplayData = [];
         let favoritePage = 1;
+
+        // ========== 获取收藏列表 (每次从 localStorage 读取最新) ==========
+        function getFavorites() {
+            return JSON.parse(localStorage.getItem('favorites') || '[]');
+        }
+
+        // ========== 保存收藏 ==========
+        function saveFavorites(favorites) {
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+        }
 
         // ========== 初始化 ==========
         async function init() {
@@ -702,11 +693,15 @@
             
             if (tab === 'favorite') {
                 renderFavorites();
+            } else if (tab === 'all') {
+                // 切换回全部时重新渲染，确保收藏状态正确
+                applyFiltersAndSort();
             }
         }
 
         // ========== 收藏功能 ==========
         function toggleFavorite(id) {
+            const favorites = getFavorites();
             const index = favorites.indexOf(id);
             if (index > -1) {
                 favorites.splice(index, 1);
@@ -715,29 +710,31 @@
                 favorites.push(id);
                 showToast('已加入收藏', 'success');
             }
-            localStorage.setItem('favorites', JSON.stringify(favorites));
+            saveFavorites(favorites);
             updateFavoriteCount();
             
+            // 重新渲染当前页面以更新收藏状态
             if (currentTab === 'favorite') {
                 renderFavorites();
+            } else if (currentTab === 'all') {
+                applyFiltersAndSort();
+            } else if (currentTab === 'album' && currentAlbumDetail) {
+                renderAlbumDetail();
             }
-            
-            // 更新按钮状态
-            document.querySelectorAll(`.favorite-btn[data-id="${id}"]`).forEach(btn => {
-                btn.classList.toggle('active', favorites.includes(id));
-                btn.innerHTML = favorites.includes(id) ? '❤️' : '🤍';
-            });
         }
 
         function isFavorite(id) {
+            const favorites = getFavorites();
             return favorites.includes(id);
         }
 
         function updateFavoriteCount() {
+            const favorites = getFavorites();
             document.getElementById('favoriteCount').innerText = favorites.length;
         }
 
         function renderFavorites() {
+            const favorites = getFavorites();
             favoriteDisplayData = allData.filter(item => favorites.includes(item.id));
             const query = document.getElementById('favoriteSearchInput').value.toLowerCase().trim();
             if (query) {
@@ -759,7 +756,7 @@
                 return;
             }
             
-            container.innerHTML = data.map(item => renderItemCard(item, true)).join('');
+            container.innerHTML = data.map(item => renderItemCard(item)).join('');
             renderPagination('favoritePagination', total, 'favoritePage', 'renderFavorites()');
         }
 
@@ -773,7 +770,6 @@
             navigator.clipboard.writeText(text).then(() => {
                 showToast(message, 'success');
             }).catch(() => {
-                // 降级方案
                 const textarea = document.createElement('textarea');
                 textarea.value = text;
                 document.body.appendChild(textarea);
@@ -784,12 +780,16 @@
             });
         }
 
-        function copyItemInfo(item) {
+        function copyItemInfo(id) {
+            const item = allData.find(i => i.id === id);
+            if (!item) return;
             const info = `${item.name}\n${item.desc}\n链接：${item.fileUrl}\n文档：${item.docUrl || '无'}\n示例：${item.exampleUrl || '无'}`;
             copyToClipboard(info, '📋 资源信息已复制');
         }
 
-        function copyItemLink(item) {
+        function copyItemLink(id) {
+            const item = allData.find(i => i.id === id);
+            if (!item) return;
             copyToClipboard(item.fileUrl, '🔗 链接已复制');
         }
 
@@ -880,11 +880,12 @@
                 document.getElementById('pagination').innerHTML = '';
                 return;
             }
-            container.innerHTML = data.map(item => renderItemCard(item, false)).join('');
+            container.innerHTML = data.map(item => renderItemCard(item)).join('');
             renderPagination('pagination', total, 'currentPage', 'renderPage(currentPage)');
         }
 
-        function renderItemCard(item, isFavoriteView = false) {
+        // ========== 渲染卡片 (修复收藏状态) ==========
+        function renderItemCard(item) {
             const imgSrc = item.image ? `封面/${item.image}` : `封面/${item.id}.png`;
             const links = [];
             if(item.fileUrl) links.push(`<a href="${item.fileUrl}" target="_blank">📁 文件</a>`);
@@ -892,6 +893,7 @@
             if(item.docUrl2) links.push(`<a href="${item.docUrl2}" target="_blank">📄 文档 2</a>`);
             if(item.exampleUrl) links.push(`<a href="${item.exampleUrl}" target="_blank">🚀 示例</a>`);
             
+            // 每次渲染时重新检查收藏状态
             const isFav = isFavorite(item.id);
             
             return `
@@ -906,7 +908,7 @@
                             ${isFav ? '❤️' : '🤍'}
                         </button>
                         <button class="card-action-btn copy" 
-                                onclick="copyItemInfo(${JSON.stringify(item).replace(/"/g, '&quot;')})" 
+                                onclick="copyItemInfo('${item.id}')" 
                                 title="复制信息">
                             📋
                         </button>
@@ -919,7 +921,7 @@
                 <div class="links">${links.join('')}</div>
                 <div class="card-meta">
                     <span>📅 ${item.uploadTime}</span>
-                    <button onclick="copyItemLink(item)" style="background:none;border:none;cursor:pointer;font-size:1em;" title="复制链接">🔗</button>
+                    <button class="copy-link-btn" onclick="copyItemLink('${item.id}')" title="复制链接">🔗</button>
                 </div>
             </div>`;
         }
@@ -988,7 +990,7 @@
                 document.getElementById('albumDetailPagination').innerHTML = '';
                 return;
             }
-            container.innerHTML = data.map(item => renderItemCard(item, false)).join('');
+            container.innerHTML = data.map(item => renderItemCard(item)).join('');
             renderPagination('albumDetailPagination', total, 'albumDetailPage', 'renderAlbumDetail()');
         }
 
