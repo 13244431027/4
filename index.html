@@ -4,88 +4,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>资源库</title>
-    <meta name="description" content="开源资源库，收录优质项目">
     <style>
         :root {
             --primary: #2563eb;
             --primary-hover: #1d4ed8;
+            --primary-light: #dbeafe;
             --secondary: #64748b;
             --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
             --bg: #f8fafc;
             --card-bg: #ffffff;
             --text: #1e293b;
             --text-light: #64748b;
             --border: #e2e8f0;
             --shadow: 0 1px 3px rgba(0,0,0,0.1);
-            --shadow-hover: 0 4px 6px -1px rgba(0,0,0,0.1);
-            --radius: 12px;
-            --radius-sm: 8px;
-        }
-
-        [data-theme="dark"] {
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text: #f1f5f9;
-            --text-light: #94a3b8;
-            --border: #334155;
-            --shadow: 0 1px 3px rgba(0,0,0,0.3);
+            --shadow-hover: 0 10px 25px -5px rgba(37, 99, 235, 0.15);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             max-width: 1200px;
             margin: 0 auto;
             padding: 30px 20px;
             background: var(--bg);
             color: var(--text);
             line-height: 1.6;
-            transition: background 0.3s, color 0.3s;
         }
 
-        /* 统计栏 */
-        .stats {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+        /* ========== 动画 ========== */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .stat-item {
-            background: var(--card-bg);
-            padding: 12px 24px;
-            border-radius: var(--radius-sm);
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            font-size: 0.9em;
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
-        .stat-item strong { color: var(--primary); font-size: 1.2em; }
-
-        /* 顶部工具栏 */
-        .toolbar {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-bottom: 15px;
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
         }
 
-        .toolbar button {
-            padding: 8px 16px;
-            border: 2px solid var(--border);
-            background: var(--card-bg);
-            cursor: pointer;
-            border-radius: var(--radius-sm);
-            font-size: 0.9em;
-            color: var(--text);
-            transition: all 0.2s;
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
 
-        .toolbar button:hover { border-color: var(--primary); color: var(--primary); }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
 
-        /* 标签页 */
+        @keyframes copySuccess {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .animate-in { animation: fadeIn 0.4s ease forwards; }
+        .animate-slide { animation: slideIn 0.3s ease forwards; }
+        .animate-scale { animation: scaleIn 0.3s ease forwards; }
+
+        /* ========== 标签页 ========== */
         .tabs {
             display: flex;
             gap: 12px;
@@ -95,21 +87,50 @@
         }
 
         .tabs button {
-            padding: 12px 32px;
+            padding: 14px 36px;
             border: 2px solid var(--border);
             background: var(--card-bg);
             cursor: pointer;
             border-radius: var(--radius);
             font-size: 1em;
-            font-weight: 500;
+            font-weight: 600;
             color: var(--text);
-            transition: all 0.2s;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
         }
 
-        .tabs button:hover { border-color: var(--primary); color: var(--primary); }
-        .tabs button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .tabs button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: 0.5s;
+        }
 
-        /* 控制栏 */
+        .tabs button:hover::before {
+            left: 100%;
+        }
+
+        .tabs button:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        .tabs button.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+            color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* ========== 控制栏 ========== */
         .controls {
             display: flex;
             gap: 12px;
@@ -118,35 +139,71 @@
             flex-wrap: wrap;
         }
 
-        .controls input, .controls select {
-            padding: 12px 16px;
+        .controls input,
+        .controls select {
+            padding: 14px 18px;
             border: 2px solid var(--border);
             border-radius: var(--radius-sm);
             font-size: 0.95em;
             background: var(--card-bg);
             color: var(--text);
+            transition: var(--transition);
         }
 
-        .controls input:focus, .controls select:focus { outline: none; border-color: var(--primary); }
-        .controls input { width: 100%; max-width: 450px; }
+        .controls input:focus,
+        .controls select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .controls input {
+            width: 100%;
+            max-width: 450px;
+        }
 
         .controls button {
-            padding: 12px 20px;
+            padding: 14px 22px;
             border: 2px solid var(--border);
             background: var(--card-bg);
             cursor: pointer;
             border-radius: var(--radius-sm);
             font-size: 0.95em;
+            font-weight: 600;
             color: var(--text);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .controls button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-        .controls select:disabled { opacity: 0.5; cursor: not-allowed; }
+        .controls button:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
 
-        /* 网格 */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
+        .controls button.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+            color: #fff;
+            border-color: var(--primary);
+        }
 
-        /* 卡片 */
+        .controls select:disabled,
+        .controls button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ========== 网格布局 ========== */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        /* ========== 卡片 ========== */
         .card {
             background: var(--card-bg);
             padding: 20px;
@@ -154,119 +211,392 @@
             box-shadow: var(--shadow);
             display: flex;
             flex-direction: column;
-            transition: all 0.3s;
+            transition: var(--transition);
             border: 1px solid var(--border);
             overflow: hidden;
-            animation: fadeIn 0.3s ease;
+            position: relative;
+            animation: fadeIn 0.4s ease forwards;
         }
 
-        .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); }
-        .card img { width: 100%; height: 180px; object-fit: cover; border-radius: var(--radius-sm); background: linear-gradient(135deg, #e0e7ff 0%, #f0f9ff 100%); margin-bottom: 16px; }
-        .card h3 { margin: 0 0 8px; font-size: 1.15em; font-weight: 600; }
-        .card p { font-size: 0.9em; color: var(--text-light); flex-grow: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-        .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
-        .tags span { background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-size: 0.75em; }
-        .authors { margin: 12px 0; font-size: 0.85em; color: var(--text-light); }
-        .authors a { color: var(--primary); text-decoration: none; margin-right: 10px; }
-        .authors a:hover { text-decoration: underline; }
-        .links { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
-        .links a { flex: 1; min-width: 70px; text-align: center; padding: 8px 12px; background: var(--text); color: #fff; text-decoration: none; border-radius: var(--radius-sm); font-size: 0.8em; }
-        .links a:hover { background: var(--primary); }
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary-light);
+        }
 
-        /* 专辑卡片 */
-        .album-card { cursor: pointer; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); }
-        .album-card:hover { border-color: var(--primary); }
-        .album-count { font-size: 0.8em; color: var(--text-light); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+        .card-image-wrapper {
+            position: relative;
+            width: 100%;
+            height: 180px;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f0f9ff 100%);
+            margin-bottom: 16px;
+        }
 
-        /* 分页 */
-        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 40px; flex-wrap: wrap; }
-        .pagination button { min-width: 40px; height: 40px; padding: 0 16px; border: 2px solid var(--border); background: var(--card-bg); cursor: pointer; border-radius: var(--radius-sm); font-size: 0.9em; }
-        .pagination button:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
-        .pagination button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-        .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
 
-        /* 面包屑 */
-        .breadcrumb { margin-bottom: 20px; font-size: 0.95em; }
-        .breadcrumb a { color: var(--primary); text-decoration: none; cursor: pointer; }
-        .breadcrumb a:hover { text-decoration: underline; }
-        .breadcrumb span { color: var(--text-light); margin: 0 8px; }
+        .card:hover img {
+            transform: scale(1.08);
+        }
 
-        /* 专辑详情头 */
-        #albumDetailHeader { background: var(--card-bg); padding: 24px; border-radius: var(--radius); margin-bottom: 24px; box-shadow: var(--shadow); border: 1px solid var(--border); }
-        #albumDetailHeader h2 { margin: 0 0 12px; font-size: 1.5em; }
-        #albumDetailHeader p { color: var(--text-light); }
+        .card-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: var(--transition);
+        }
 
-        /* 隐藏 */
-        .hidden { display: none !important; }
+        .card:hover .card-actions {
+            opacity: 1;
+            transform: translateY(0);
+        }
 
-        /* 空状态 */
-        .empty-state { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-light); font-size: 1.1em; }
-
-        /* 骨架屏 */
-        .skeleton { background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: var(--radius-sm); }
-        .skeleton-img { height: 180px; margin-bottom: 16px; }
-        .skeleton-text { height: 20px; margin-bottom: 8px; }
-        .skeleton-text.short { width: 60%; }
-
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* 返回顶部 */
-        #backToTop {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: #fff;
+        .card-action-btn {
+            width: 36px;
+            height: 36px;
             border: none;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.95);
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
-            font-size: 1.5em;
-            display: none;
+            display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s;
-            z-index: 1000;
+            font-size: 1.1em;
+            transition: var(--transition);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
-        #backToTop:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5); }
-        #backToTop.show { display: flex; }
+        .card-action-btn:hover {
+            transform: scale(1.15);
+        }
 
-        /* 响应式 */
+        .card-action-btn.favorite.active {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .card-action-btn.copy:hover {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .card h3 {
+            margin: 0 0 8px;
+            font-size: 1.15em;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.4;
+        }
+
+        .card p {
+            font-size: 0.9em;
+            color: var(--text-light);
+            flex-grow: 1;
+            line-height: 1.6;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 12px 0;
+        }
+
+        .tags span {
+            background: linear-gradient(135deg, var(--primary-light) 0%, #e0f2fe 100%);
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .tags span:hover {
+            transform: scale(1.1);
+        }
+
+        .authors {
+            margin: 12px 0;
+            font-size: 0.85em;
+            color: var(--text-light);
+        }
+
+        .authors a {
+            color: var(--primary);
+            text-decoration: none;
+            margin-right: 10px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .authors a:hover {
+            color: var(--primary-hover);
+            text-decoration: underline;
+        }
+
+        .links {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .links a {
+            flex: 1;
+            min-width: 70px;
+            text-align: center;
+            padding: 10px 14px;
+            background: linear-gradient(135deg, var(--text) 0%, #334155 100%);
+            color: #fff;
+            text-decoration: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.8em;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .links a:hover {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .card-meta {
+            font-size: 0.75em;
+            color: var(--text-light);
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* ========== 专辑卡片 ========== */
+        .album-card {
+            cursor: pointer;
+            position: relative;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        }
+
+        .album-card:hover {
+            border-color: var(--primary);
+        }
+
+        .album-card .card-image-wrapper {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        }
+
+        .album-count {
+            font-size: 0.8em;
+            color: var(--text-light);
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ========== 分页 ========== */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+
+        .pagination button {
+            min-width: 44px;
+            height: 44px;
+            padding: 0 16px;
+            border: 2px solid var(--border);
+            background: var(--card-bg);
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            font-size: 0.9em;
+            font-weight: 600;
+            color: var(--text);
+            transition: var(--transition);
+        }
+
+        .pagination button:hover:not(:disabled) {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        .pagination button.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+            color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .pagination span {
+            display: flex;
+            align-items: center;
+            color: var(--text-light);
+            padding: 0 8px;
+        }
+
+        /* ========== 面包屑 ========== */
+        .breadcrumb {
+            margin-bottom: 20px;
+            font-size: 0.95em;
+            animation: slideIn 0.3s ease;
+        }
+
+        .breadcrumb a {
+            color: var(--primary);
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .breadcrumb a:hover {
+            color: var(--primary-hover);
+            text-decoration: underline;
+        }
+
+        .breadcrumb span {
+            color: var(--text-light);
+            margin: 0 8px;
+        }
+
+        /* ========== 专辑详情头 ========== */
+        #albumDetailHeader {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            padding: 24px;
+            border-radius: var(--radius);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            animation: scaleIn 0.3s ease;
+        }
+
+        #albumDetailHeader h2 {
+            margin: 0 0 12px;
+            font-size: 1.5em;
+            color: var(--text);
+        }
+
+        #albumDetailHeader p {
+            color: var(--text-light);
+            margin: 0;
+        }
+
+        /* ========== 隐藏 ========== */
+        .hidden { display: none !important; }
+
+        /* ========== 空状态 ========== */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-light);
+            font-size: 1.1em;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        /* ========== Toast 提示 ========== */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--text);
+            color: #fff;
+            padding: 14px 28px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 1000;
+            opacity: 0;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        .toast.warning { background: var(--warning); }
+
+        /* ========== 收藏计数 ========== */
+        .favorite-count {
+            background: var(--danger-light);
+            color: var(--danger);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        /* ========== 响应式 ========== */
         @media (max-width: 768px) {
             body { padding: 20px 15px; }
             .grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+            .tabs button { padding: 12px 24px; font-size: 0.9em; }
             .controls { flex-direction: column; align-items: stretch; }
             .controls input { max-width: 100%; }
+            .card-image-wrapper { height: 160px; }
+            .card-actions { opacity: 1; transform: translateY(0); }
         }
 
         @media (max-width: 480px) {
             .grid { grid-template-columns: 1fr; }
-            .stats { gap: 15px; }
-            .stat-item { padding: 10px 16px; }
+            .tabs { gap: 8px; }
+            .tabs button { padding: 10px 16px; }
+            .links a { min-width: 60px; padding: 8px 10px; font-size: 0.75em; }
+            .card-action-btn { width: 32px; height: 32px; }
+        }
+
+        /* ========== 复制成功动画 ========== */
+        .copy-success {
+            animation: copySuccess 0.3s ease;
         }
     </style>
 </head>
 <body>
-    <!-- 统计栏 -->
-    <div class="stats">
-        <div class="stat-item">📦 资源总数：<strong id="statItems">0</strong></div>
-        <div class="stat-item">📚 专辑总数：<strong id="statAlbums">0</strong></div>
-        <div class="stat-item">👤 作者总数：<strong id="statAuthors">0</strong></div>
-    </div>
-
-    <!-- 工具栏 -->
-    <div class="toolbar">
-        <button onclick="toggleTheme()" id="themeBtn">🌙 深色</button>
-    </div>
-
     <!-- 标签页 -->
     <div class="tabs">
-        <button id="tabAll" class="active" onclick="switchTab('all')">全部资源</button>
-        <button id="tabAlbum" onclick="switchTab('album')">专辑</button>
+        <button id="tabAll" class="active" onclick="switchTab('all')">📚 全部资源</button>
+        <button id="tabAlbum" onclick="switchTab('album')">📁 专辑</button>
+        <button id="tabFavorite" onclick="switchTab('favorite')">❤️ 收藏<span id="favoriteCount" class="favorite-count">0</span></button>
     </div>
 
     <!-- 全部资源视图 -->
@@ -304,8 +634,20 @@
         <div id="albumDetailPagination" class="pagination"></div>
     </div>
 
-    <!-- 返回顶部 -->
-    <button id="backToTop" onclick="scrollToTop()">⬆️</button>
+    <!-- 收藏视图 -->
+    <div id="viewFavorite" class="hidden">
+        <div class="controls">
+            <input type="text" id="favoriteSearchInput" placeholder="🔍 搜索收藏的资源..." oninput="handleFavoriteSearch()">
+        </div>
+        <div id="favoriteGrid" class="grid"></div>
+        <div id="favoritePagination" class="pagination"></div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div id="toast" class="toast">
+        <span id="toastIcon">✓</span>
+        <span id="toastMessage">操作成功</span>
+    </div>
 
     <script>
         const ITEMS_PER_PAGE = 20;
@@ -320,54 +662,12 @@
         let currentAlbumDetail = null;
         let albumDetailData = [];
         let albumDetailPage = 1;
-        let searchTimer = null;
+        let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+        let favoriteDisplayData = [];
+        let favoritePage = 1;
 
-        // 初始化主题
-        function initTheme() {
-            const saved = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', saved);
-            updateThemeBtn(saved);
-        }
-
-        function toggleTheme() {
-            const html = document.documentElement;
-            const isDark = html.getAttribute('data-theme') === 'dark';
-            const newTheme = isDark ? 'light' : 'dark';
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeBtn(newTheme);
-        }
-
-        function updateThemeBtn(theme) {
-            document.getElementById('themeBtn').innerText = theme === 'dark' ? '☀️ 浅色' : '🌙 深色';
-        }
-
-        // 返回顶部
-        function scrollToTop() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        window.addEventListener('scroll', () => {
-            const btn = document.getElementById('backToTop');
-            if (window.scrollY > 300) btn.classList.add('show');
-            else btn.classList.remove('show');
-        });
-
-        // 骨架屏
-        function showSkeleton(count = 8) {
-            const container = document.getElementById('app');
-            container.innerHTML = Array(count).fill(0).map(() => `
-                <div class="card">
-                    <div class="skeleton skeleton-img"></div>
-                    <div class="skeleton skeleton-text" style="width: 80%"></div>
-                    <div class="skeleton skeleton-text"></div>
-                    <div class="skeleton skeleton-text short"></div>
-                </div>
-            `).join('');
-        }
-
+        // ========== 初始化 ==========
         async function init() {
-            showSkeleton();
             try {
                 const [resData, resAlbums] = await Promise.all([
                     fetch('信息.json'),
@@ -375,41 +675,145 @@
                 ]);
                 allData = await resData.json();
                 albums = await resAlbums.json();
-                
-                // 更新统计
-                document.getElementById('statItems').innerText = allData.length;
-                document.getElementById('statAlbums').innerText = albums.length;
-                const authors = new Set(allData.flatMap(i => i.authors.map(a => a.name)));
-                document.getElementById('statAuthors').innerText = authors.size;
-
                 displayData = [...allData];
                 displayAlbums = [...albums];
+                updateFavoriteCount();
                 applyFiltersAndSort();
                 renderAlbumList();
             } catch (e) {
-                document.getElementById('app').innerHTML = '<div class="empty-state">⚠️ 加载失败，请检查 JSON 文件</div>';
+                document.getElementById('app').innerHTML = '<div class="empty-state"><span class="empty-state-icon">⚠️</span>加载失败，请检查 JSON 文件</div>';
                 console.error(e);
             }
         }
 
+        // ========== 标签页切换 ==========
         function switchTab(tab) {
             currentTab = tab;
             document.getElementById('tabAll').classList.toggle('active', tab === 'all');
             document.getElementById('tabAlbum').classList.toggle('active', tab === 'album');
+            document.getElementById('tabFavorite').classList.toggle('active', tab === 'favorite');
+            
             document.getElementById('viewAll').classList.toggle('hidden', tab !== 'all');
             document.getElementById('viewAlbumList').classList.toggle('hidden', tab !== 'album');
             document.getElementById('viewAlbumDetail').classList.add('hidden');
+            document.getElementById('viewFavorite').classList.toggle('hidden', tab !== 'favorite');
+            
             currentAlbumDetail = null;
-            scrollToTop();
+            
+            if (tab === 'favorite') {
+                renderFavorites();
+            }
         }
 
-        // 搜索防抖
+        // ========== 收藏功能 ==========
+        function toggleFavorite(id) {
+            const index = favorites.indexOf(id);
+            if (index > -1) {
+                favorites.splice(index, 1);
+                showToast('已取消收藏', 'warning');
+            } else {
+                favorites.push(id);
+                showToast('已加入收藏', 'success');
+            }
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+            updateFavoriteCount();
+            
+            if (currentTab === 'favorite') {
+                renderFavorites();
+            }
+            
+            // 更新按钮状态
+            document.querySelectorAll(`.favorite-btn[data-id="${id}"]`).forEach(btn => {
+                btn.classList.toggle('active', favorites.includes(id));
+                btn.innerHTML = favorites.includes(id) ? '❤️' : '🤍';
+            });
+        }
+
+        function isFavorite(id) {
+            return favorites.includes(id);
+        }
+
+        function updateFavoriteCount() {
+            document.getElementById('favoriteCount').innerText = favorites.length;
+        }
+
+        function renderFavorites() {
+            favoriteDisplayData = allData.filter(item => favorites.includes(item.id));
+            const query = document.getElementById('favoriteSearchInput').value.toLowerCase().trim();
+            if (query) {
+                favoriteDisplayData = favoriteDisplayData.filter(item => 
+                    item.name.toLowerCase().includes(query) ||
+                    item.desc.toLowerCase().includes(query) ||
+                    item.tags.some(t => t.toLowerCase().includes(query))
+                );
+            }
+            
+            const container = document.getElementById('favoriteGrid');
+            const total = Math.ceil(favoriteDisplayData.length / ITEMS_PER_PAGE);
+            const start = (favoritePage - 1) * ITEMS_PER_PAGE;
+            const data = favoriteDisplayData.slice(start, start + ITEMS_PER_PAGE);
+            
+            if (data.length === 0) {
+                container.innerHTML = '<div class="empty-state"><span class="empty-state-icon">❤️</span>暂无收藏资源<br><small>点击卡片上的 🤍 加入收藏</small></div>';
+                document.getElementById('favoritePagination').innerHTML = '';
+                return;
+            }
+            
+            container.innerHTML = data.map(item => renderItemCard(item, true)).join('');
+            renderPagination('favoritePagination', total, 'favoritePage', 'renderFavorites()');
+        }
+
+        function handleFavoriteSearch() {
+            favoritePage = 1;
+            renderFavorites();
+        }
+
+        // ========== 复制功能 ==========
+        function copyToClipboard(text, message = '已复制') {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(message, 'success');
+            }).catch(() => {
+                // 降级方案
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast(message, 'success');
+            });
+        }
+
+        function copyItemInfo(item) {
+            const info = `${item.name}\n${item.desc}\n链接：${item.fileUrl}\n文档：${item.docUrl || '无'}\n示例：${item.exampleUrl || '无'}`;
+            copyToClipboard(info, '📋 资源信息已复制');
+        }
+
+        function copyItemLink(item) {
+            copyToClipboard(item.fileUrl, '🔗 链接已复制');
+        }
+
+        // ========== Toast 提示 ==========
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const msg = document.getElementById('toastMessage');
+            
+            toast.className = `toast ${type}`;
+            icon.innerText = type === 'success' ? '✓' : type === 'error' ? '✗' : '!';
+            msg.innerText = message;
+            
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // ========== 搜索与排序 ==========
         function handleSearch() {
-            clearTimeout(searchTimer);
-            searchTimer = setTimeout(() => {
-                currentPage = 1;
-                applyFiltersAndSort();
-            }, 300);
+            currentPage = 1;
+            applyFiltersAndSort();
         }
 
         function handleSort() {
@@ -425,11 +829,11 @@
             const sortSelect = document.getElementById('sortSelect');
             if (isExploreMode) {
                 btn.classList.add('active');
-                btn.innerText = '✅ 探索中';
+                btn.innerHTML = '✅ 探索中';
                 sortSelect.disabled = true;
             } else {
                 btn.classList.remove('active');
-                btn.innerText = '🎲 探索模式';
+                btn.innerHTML = '🎲 探索模式';
                 sortSelect.disabled = false;
             }
             currentPage = 1;
@@ -452,8 +856,9 @@
                 item.tags.some(t => t.toLowerCase().includes(query)) ||
                 item.authors.some(a => a.name.toLowerCase().includes(query))
             );
-            if (isExploreMode) shuffle(displayData);
-            else {
+            if (isExploreMode) {
+                shuffle(displayData);
+            } else {
                 displayData.sort((a, b) => {
                     const timeA = new Date(a.uploadTime).getTime();
                     const timeB = new Date(b.uploadTime).getTime();
@@ -463,6 +868,7 @@
             renderPage(1);
         }
 
+        // ========== 渲染页面 ==========
         function renderPage(page) {
             currentPage = page;
             const start = (page - 1) * ITEMS_PER_PAGE;
@@ -470,43 +876,62 @@
             const total = Math.ceil(displayData.length / ITEMS_PER_PAGE);
             const container = document.getElementById('app');
             if (data.length === 0) {
-                container.innerHTML = '<div class="empty-state">😕 无匹配结果</div>';
+                container.innerHTML = '<div class="empty-state"><span class="empty-state-icon">😕</span>无匹配结果</div>';
                 document.getElementById('pagination').innerHTML = '';
                 return;
             }
-            container.innerHTML = data.map(item => renderItemCard(item)).join('');
-            renderPagination('pagination', total);
+            container.innerHTML = data.map(item => renderItemCard(item, false)).join('');
+            renderPagination('pagination', total, 'currentPage', 'renderPage(currentPage)');
         }
 
-        function renderItemCard(item) {
+        function renderItemCard(item, isFavoriteView = false) {
             const imgSrc = item.image ? `封面/${item.image}` : `封面/${item.id}.png`;
             const links = [];
             if(item.fileUrl) links.push(`<a href="${item.fileUrl}" target="_blank">📁 文件</a>`);
             if(item.docUrl) links.push(`<a href="${item.docUrl}" target="_blank">📄 文档 1</a>`);
             if(item.docUrl2) links.push(`<a href="${item.docUrl2}" target="_blank">📄 文档 2</a>`);
             if(item.exampleUrl) links.push(`<a href="${item.exampleUrl}" target="_blank">🚀 示例</a>`);
+            
+            const isFav = isFavorite(item.id);
+            
             return `
             <div class="card">
-                <img src="${imgSrc}" alt="${item.name}" onerror="this.style.display='none'">
+                <div class="card-image-wrapper">
+                    <img src="${imgSrc}" alt="${item.name}" onerror="this.style.display='none'">
+                    <div class="card-actions">
+                        <button class="card-action-btn favorite ${isFav ? 'active' : ''}" 
+                                data-id="${item.id}"
+                                onclick="toggleFavorite('${item.id}')" 
+                                title="${isFav ? '取消收藏' : '加入收藏'}">
+                            ${isFav ? '❤️' : '🤍'}
+                        </button>
+                        <button class="card-action-btn copy" 
+                                onclick="copyItemInfo(${JSON.stringify(item).replace(/"/g, '&quot;')})" 
+                                title="复制信息">
+                            📋
+                        </button>
+                    </div>
+                </div>
                 <h3>${item.name}</h3>
                 <p>${item.desc}</p>
                 <div class="tags">${item.tags.map(t => `<span>#${t}</span>`).join('')}</div>
                 <div class="authors">👤 ${item.authors.map(a => `<a href="${a.url}" target="_blank">${a.name}</a>`).join(' ')}</div>
                 <div class="links">${links.join('')}</div>
-                <div style="font-size:0.75em;color:var(--text-light);margin-top:12px;">📅 ${item.uploadTime}</div>
+                <div class="card-meta">
+                    <span>📅 ${item.uploadTime}</span>
+                    <button onclick="copyItemLink(item)" style="background:none;border:none;cursor:pointer;font-size:1em;" title="复制链接">🔗</button>
+                </div>
             </div>`;
         }
 
+        // ========== 专辑功能 ==========
         function handleAlbumSearch() {
-            clearTimeout(searchTimer);
-            searchTimer = setTimeout(() => {
-                const query = document.getElementById('albumSearchInput').value.toLowerCase().trim();
-                displayAlbums = albums.filter(album => 
-                    album.name.toLowerCase().includes(query) ||
-                    album.desc.toLowerCase().includes(query)
-                );
-                renderAlbumList();
-            }, 300);
+            const query = document.getElementById('albumSearchInput').value.toLowerCase().trim();
+            displayAlbums = albums.filter(album => 
+                album.name.toLowerCase().includes(query) ||
+                album.desc.toLowerCase().includes(query)
+            );
+            renderAlbumList();
         }
 
         function renderAlbumList() {
@@ -515,7 +940,7 @@
             const start = (currentPage - 1) * ITEMS_PER_PAGE;
             const data = displayAlbums.slice(start, start + ITEMS_PER_PAGE);
             if (data.length === 0) {
-                container.innerHTML = '<div class="empty-state">😕 无匹配专辑</div>';
+                container.innerHTML = '<div class="empty-state"><span class="empty-state-icon">📁</span>无匹配专辑</div>';
                 document.getElementById('albumPagination').innerHTML = '';
                 return;
             }
@@ -524,13 +949,15 @@
                 const imgTag = coverSrc ? `<img src="${coverSrc}" alt="${album.name}" onerror="this.style.display='none'">` : '';
                 return `
                 <div class="card album-card" onclick="openAlbumDetail('${album.albumId}')">
-                    ${imgTag}
+                    <div class="card-image-wrapper">
+                        ${imgTag}
+                    </div>
                     <h3>📚 ${album.name}</h3>
                     <p>${album.desc}</p>
                     <div class="album-count">📦 包含 ${album.itemIds.length} 个资源</div>
                 </div>`;
             }).join('');
-            renderPagination('albumPagination', total);
+            renderPagination('albumPagination', total, 'currentPage', 'renderAlbumList()');
         }
 
         function openAlbumDetail(albumId) {
@@ -547,7 +974,6 @@
             `;
             albumDetailPage = 1;
             renderAlbumDetail();
-            scrollToTop();
         }
 
         function renderAlbumDetail() {
@@ -558,31 +984,24 @@
             const start = (albumDetailPage - 1) * ITEMS_PER_PAGE;
             const data = albumDetailData.slice(start, start + ITEMS_PER_PAGE);
             if (data.length === 0) {
-                container.innerHTML = '<div class="empty-state">😕 该专辑暂无资源</div>';
+                container.innerHTML = '<div class="empty-state"><span class="empty-state-icon">😕</span>该专辑暂无资源</div>';
                 document.getElementById('albumDetailPagination').innerHTML = '';
                 return;
             }
-            container.innerHTML = data.map(item => renderItemCard(item)).join('');
-            renderPagination('albumDetailPagination', total);
+            container.innerHTML = data.map(item => renderItemCard(item, false)).join('');
+            renderPagination('albumDetailPagination', total, 'albumDetailPage', 'renderAlbumDetail()');
         }
 
-        function renderPagination(containerId, total) {
+        // ========== 分页 ==========
+        function renderPagination(containerId, total, pageVar, pageFunc) {
             const container = document.getElementById(containerId);
             if (total <= 1) { container.innerHTML = ''; return; }
-            let pageVar, pageFunc, currentPageVal;
-            if (containerId === 'albumDetailPagination') {
-                pageVar = 'albumDetailPage';
-                pageFunc = 'renderAlbumDetail()';
-                currentPageVal = albumDetailPage;
-            } else if (containerId === 'albumPagination') {
-                pageVar = 'currentPage';
-                pageFunc = 'renderAlbumList()';
-                currentPageVal = currentPage;
-            } else {
-                pageVar = 'currentPage';
-                pageFunc = 'renderPage(currentPage)';
-                currentPageVal = currentPage;
-            }
+            
+            let currentPageVal;
+            if (pageVar === 'albumDetailPage') currentPageVal = albumDetailPage;
+            else if (pageVar === 'favoritePage') currentPageVal = favoritePage;
+            else currentPageVal = currentPage;
+            
             let html = `<button onclick="${pageVar}=${currentPageVal-1};${pageFunc}" ${currentPageVal === 1 ? 'disabled' : ''}>⬅️</button>`;
             for (let i = 1; i <= total; i++) {
                 if (i === 1 || i === total || (i >= currentPageVal - 1 && i <= currentPageVal + 1)) {
@@ -595,8 +1014,6 @@
             container.innerHTML = html;
         }
 
-        // 初始化
-        initTheme();
         init();
     </script>
 </body>
