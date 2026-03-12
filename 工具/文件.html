@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GitHub Code Viewer Pro</title>
+  <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/toolbar/prism-toolbar.min.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    /* ====== 全局动画配置 ====== */
+    :root {
+      --transition-fast: 0.15s ease;
+      --transition-normal: 0.25s ease;
+      --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      --bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1e1e1e; color: #d4d4d4; padding: 16px; line-height: 1.5;
+      overflow-x: hidden;
+    }
+    
+    /* 淡入动画 */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* 滑入动画 */
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    
+    /* 下滑动画 */
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); max-height: 0; }
+      to { opacity: 1; transform: translateY(0); max-height: 500px; }
+    }
+    
+    /* 上滑动画 */
+    @keyframes slideUp {
+      from { opacity: 1; transform: translateY(0); max-height: 500px; }
+      to { opacity: 0; transform: translateY(-10px); max-height: 0; }
+    }
+    
+    /* 脉冲动画 */
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    /* 旋转加载 */
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    /* 闪烁高亮 */
+    @keyframes flashHighlight {
+      0%, 100% { background: rgba(220, 220, 170, 0.15); }
+      50% { background: rgba(220, 220, 170, 0.3); }
+    }
+    
+    /* 成功提示 */
+    @keyframes successPop {
+      0% { transform: scale(0.8); opacity: 0; }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    
+    /* 抖动错误 */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    
+    .container { 
+      max-width: 1400px; 
+      margin: 0 auto;
+      animation: fadeIn 0.5s var(--transition-slow);
+    }
+    
+    /* ====== 头部 ====== */
+    .header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 16px; background: #252526; border-radius: 6px;
+      margin-bottom: 12px; flex-wrap: wrap; gap: 10px;
+      animation: slideIn 0.4s var(--transition-slow);
+      transition: box-shadow var(--transition-fast);
+    }
+    .header:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    
+    .file-info { 
+      font-size: 14px; color: #9cdcfe; 
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; 
+    }
+    .file-info a { color: #569cd6; text-decoration: none; transition: color var(--transition-fast); }
+    .file-info a:hover { color: #7cb3ff; text-decoration: underline; }
+    
+    .actions { display: flex; gap: 8px; }
+    
+    .btn {
+      padding: 6px 12px; background: #0e639c; color: white;
+      border: none; border-radius: 4px; cursor: pointer; font-size: 13px;
+      transition: all var(--transition-fast);
+      position: relative; overflow: hidden;
+    }
+    .btn::before {
+      content: ''; position: absolute; top: 50%; left: 50%;
+      width: 0; height: 0; background: rgba(255,255,255,0.2);
+      border-radius: 50%; transform: translate(-50%, -50%);
+      transition: width 0.4s, height 0.4s;
+    }
+    .btn:hover::before { width: 200px; height: 200px; }
+    .btn:hover { background: #1177bb; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { background: #3c3c3c; cursor: not-allowed; opacity: 0.6; transform: none; }
+    
+    .btn-outline { background: transparent; border: 1px solid #0e639c; }
+    .btn-outline:hover { background: #0e639c20; }
+    
+    .btn-search { background: #2d5016; }
+    .btn-search:hover { background: #3a6b1c; }
+    
+    /* ====== 搜索框 ====== */
+    .search-box {
+      display: flex; gap: 8px; margin-bottom: 12px; align-items: center;
+      animation: slideIn 0.5s var(--transition-slow) 0.1s both;
+    }
+    
+    .search-input {
+      flex: 1; padding: 10px 14px; background: #252526; border: 1px solid #3c3c3c;
+      border-radius: 6px; color: #d4d4d4; font-size: 14px; outline: none;
+      transition: all var(--transition-fast);
+    }
+    .search-input:focus { 
+      border-color: #0e639c; 
+      box-shadow: 0 0 0 3px rgba(14, 99, 156, 0.2);
+    }
+    .search-input::placeholder { color: #666; }
+    .search-input:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    .search-btn {
+      padding: 10px 16px; background: #2d5016; border: none;
+      border-radius: 6px; color: #fff; cursor: pointer; font-size: 13px;
+      display: flex; align-items: center; gap: 6px;
+      transition: all var(--transition-fast);
+    }
+    .search-btn:hover { 
+      background: #3a6b1c; 
+      transform: scale(1.02);
+    }
+    .search-btn:active { transform: scale(0.98); }
+    .search-btn:disabled { background: #3c3c3c; cursor: not-allowed; transform: none; }
+    .search-btn .icon { transition: transform var(--transition-fast); }
+    .search-btn:hover .icon { transform: scale(1.1); }
+    
+    .search-clear {
+      padding: 8px 12px; background: #3c3c3c; border: none;
+      border-radius: 4px; color: #d4d4d4; cursor: pointer; font-size: 13px;
+      transition: all var(--transition-fast);
+    }
+    .search-clear:hover { background: #505050; transform: rotate(90deg); }
+    
+    .search-info {
+      font-size: 12px; color: #888; min-width: 80px; text-align: right;
+      transition: opacity var(--transition-fast);
+    }
+    .search-info .match { color: #4ec9b0; font-weight: 600; }
+    
+    /* ====== 搜索结果 ====== */
+    .search-results {
+      background: #252526; border-radius: 6px; margin-bottom: 12px;
+      max-height: 0; overflow-y: auto; display: block;
+      border: 1px solid #3c3c3c;
+      opacity: 0;
+      transition: all var(--transition-normal);
+    }
+    .search-results.show { 
+      max-height: 300px; 
+      opacity: 1;
+      animation: slideDown 0.3s var(--transition-normal);
+    }
+    .search-results.hide {
+      animation: slideUp 0.25s var(--transition-normal);
+    }
+    
+    .search-item {
+      padding: 10px 12px; border-bottom: 1px solid #3c3c3c;
+      cursor: pointer; font-size: 13px; display: flex; flex-direction: column;
+      gap: 4px; transition: all var(--transition-fast);
+      opacity: 0;
+      animation: fadeIn 0.3s var(--transition-normal) forwards;
+    }
+    .search-item:nth-child(1) { animation-delay: 0.02s; }
+    .search-item:nth-child(2) { animation-delay: 0.04s; }
+    .search-item:nth-child(3) { animation-delay: 0.06s; }
+    .search-item:nth-child(4) { animation-delay: 0.08s; }
+    .search-item:nth-child(5) { animation-delay: 0.1s; }
+    .search-item:nth-child(n+6) { animation-delay: 0.12s; }
+    
+    .search-item:hover { 
+      background: #2d2d30; 
+      transform: translateX(4px);
+    }
+    .search-item.active { 
+      background: #0e639c30; 
+      border-left: 3px solid #0e639c;
+      animation: pulse 0.3s var(--bounce);
+    }
+    
+    .search-item .line-header {
+      display: flex; align-items: center; gap: 8px; color: #888; font-size: 11px;
+    }
+    .search-item .line-num {
+      color: #569cd6; font-family: monospace; background: #1e1e1e;
+      padding: 2px 6px; border-radius: 3px;
+      transition: all var(--transition-fast);
+    }
+    .search-item:hover .line-num { background: #0e639c; color: #fff; }
+    
+    .search-item .line-score {
+      color: #666; font-size: 10px; margin-left: auto;
+    }
+    
+    .search-item .line-snippet {
+      color: #d4d4d4; font-family: 'Consolas', monospace;
+      font-size: 12px; line-height: 1.4; word-break: break-all;
+    }
+    .search-item .line-snippet mark {
+      background: #dcdcaa50; color: #dcdcaa; padding: 0 2px;
+      border-radius: 2px; font-weight: 600;
+      animation: successPop 0.3s var(--bounce);
+    }
+    .search-item .line-snippet .ellipsis { color: #666; }
+    
+    .search-empty {
+      padding: 20px; text-align: center; color: #666; font-size: 13px;
+      animation: fadeIn 0.3s;
+    }
+    
+    /* ====== 分析面板 ====== */
+    .analysis {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px; margin-bottom: 12px; background: #252526;
+      padding: 12px; border-radius: 6px;
+      transition: all var(--transition-normal);
+      animation: slideIn 0.5s var(--transition-slow) 0.2s both;
+    }
+    .analysis.collapsing {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    
+    .stat-card {
+      text-align: center; padding: 10px; border-radius: 4px;
+      background: #1e1e1e; border-left: 3px solid #569cd6;
+      transition: all var(--transition-fast);
+      cursor: default;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .stat-card.warning { border-left-color: #dcdcaa; }
+    .stat-card.danger { border-left-color: #f48771; }
+    
+    .stat-value { 
+      font-size: 18px; font-weight: 600; color: #fff;
+      transition: all var(--transition-fast);
+    }
+    .stat-card:hover .stat-value {
+      transform: scale(1.1);
+      color: #4ec9b0;
+    }
+    .stat-label { font-size: 11px; color: #888; margin-top: 4px; }
+    .stat-sub { font-size: 10px; color: #666; margin-top: 2px; }
+    
+    /* ====== 依赖列表 ====== */
+    .deps {
+      background: #252526; border-radius: 6px; padding: 10px 14px;
+      margin-bottom: 12px;
+      animation: slideIn 0.5s var(--transition-slow) 0.3s both;
+    }
+    .deps-title { font-size: 13px; color: #9cdcfe; margin-bottom: 8px; }
+    
+    .deps-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    
+    .dep-tag {
+      background: #3c3c3c; padding: 4px 10px; border-radius: 4px;
+      font-size: 12px; color: #ce9178; cursor: pointer;
+      transition: all var(--transition-fast);
+      position: relative;
+    }
+    .dep-tag::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      border-radius: 4px; border: 1px solid transparent;
+      transition: border-color var(--transition-fast);
+    }
+    .dep-tag:hover { 
+      background: #4a4a4a; 
+      transform: translateY(-2px);
+    }
+    .dep-tag:hover::after { border-color: #4ec9b0; }
+    .dep-tag:active { transform: translateY(0); }
+    .dep-tag.external { color: #4ec9b0; }
+    
+    .dep-empty { color: #666; font-size: 12px; font-style: italic; }
+    
+    /* ====== 错误/加载 ====== */
+    .error {
+      background: #5a1d1d; color: #f48771; padding: 12px;
+      border-radius: 4px; margin-bottom: 12px; display: none;
+      animation: shake 0.4s var(--transition-fast);
+      border-left: 3px solid #f48771;
+    }
+    .error.show { display: block; }
+    
+    .loading { 
+      text-align: center; padding: 30px; color: #888; display: none;
+    }
+    .loading.show { 
+      display: block; 
+      animation: fadeIn 0.3s;
+    }
+    .loading::before {
+      content: '🔄'; display: inline-block;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+    
+    /* ====== 代码区域 ====== */
+    .code-wrapper {
+      position: relative; background: #1e1e1e; border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3); overflow: hidden;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all var(--transition-slow);
+    }
+    .code-wrapper.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .code-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 12px; background: #252526; border-bottom: 1px solid #3c3c3c;
+    }
+    .code-lang { font-size: 12px; color: #888; }
+    
+    pre {
+      background: #1e1e1e !important; border-radius: 0 !important;
+      margin: 0 !important; max-height: 60vh; overflow: auto;
+      transition: box-shadow var(--transition-fast);
+    }
+    pre:hover {
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+    }
+    code { font-size: 13px !important; }
+    
+    .prism-toolbar { top: 8px !important; right: 8px !important; }
+    
+    .copy-to-clipboard-button {
+      background: #3c3c3c !important; color: #fff !important;
+      border: none !important; padding: 4px 10px !important;
+      border-radius: 4px !important; font-size: 12px !important;
+      cursor: pointer !important;
+      transition: all var(--transition-fast) !important;
+    }
+    .copy-to-clipboard-button:hover { 
+      background: #505050 !important;
+      transform: scale(1.05);
+    }
+    .copy-to-clipboard-button[data-copy-state="copy-success"] { 
+      background: #388a34 !important;
+      animation: successPop 0.3s var(--bounce);
+    }
+    
+    /* ====== 搜索高亮行 ====== */
+    .search-highlight {
+      background: rgba(220, 220, 170, 0.15) !important;
+      border-left: 3px solid #dcdcaa !important;
+      animation: flashHighlight 1s ease-in-out;
+      transition: all var(--transition-fast);
+    }
+    
+    /* ====== 响应式 ====== */
+    @media (max-width: 768px) {
+      .header { flex-direction: column; align-items: flex-start; }
+      .analysis { grid-template-columns: repeat(2, 1fr); }
+      .search-box { flex-wrap: wrap; }
+      .search-input { flex: 1 1 200px; }
+    }
+    @media (max-width: 480px) {
+      .analysis { grid-template-columns: 1fr; }
+      .search-box { flex-direction: column; }
+      .search-btn { width: 100%; justify-content: center; }
+    }
+    
+    /* ====== 减少动画偏好 ====== */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="file-info" id="fileInfo">🔄 初始化...</div>
+      <div class="actions">
+        <button class="btn btn-outline" id="toggleAnalysis">🔽 隐藏分析</button>
+        <button class="btn" id="openGithub" disabled>GitHub</button>
+        <button class="btn" id="copyAll" disabled>复制</button>
+      </div>
+    </div>
+
+    <div class="search-box">
+      <input type="text" class="search-input" id="searchInput" 
+             placeholder="🔍 输入搜索关键词..." disabled />
+      <button class="search-btn" id="searchBtn" disabled>
+        <span class="icon">🔍</span> 搜索
+      </button>
+      <button class="search-clear" id="searchClear" disabled>✕</button>
+      <div class="search-info" id="searchInfo"></div>
+    </div>
+
+    <div class="search-results" id="searchResults"></div>
+
+    <div id="analysisPanel">
+      <div class="analysis">
+        <div class="stat-card">
+          <div class="stat-value" id="statLines">-</div>
+          <div class="stat-label">总行数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statSize">-</div>
+          <div class="stat-label">文件大小</div>
+        </div>
+        <div class="stat-card warning">
+          <div class="stat-value" id="statComments">-</div>
+          <div class="stat-label">注释占比</div>
+          <div class="stat-sub" id="commentPercent">0%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statFunctions">-</div>
+          <div class="stat-label">函数</div>
+        </div>
+        <div class="stat-card danger">
+          <div class="stat-value" id="statComplexity">-</div>
+          <div class="stat-label">复杂度</div>
+          <div class="stat-sub" id="complexityLevel">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statImports">-</div>
+          <div class="stat-label">依赖</div>
+        </div>
+      </div>
+
+      <div class="deps">
+        <div class="deps-title">📦 检测到的依赖 <span id="depsCount" style="color:#666;font-size:12px;margin-left:6px"></span></div>
+        <div class="deps-list" id="depsList"><span class="dep-empty">分析中...</span></div>
+      </div>
+    </div>
+
+    <div class="error" id="errorMsg"></div>
+    <div class="loading" id="loading">加载并分析中...</div>
+    
+    <div class="code-wrapper" id="codeWrapper">
+      <div class="code-header">
+        <span class="code-lang" id="codeLang">JavaScript</span>
+      </div>
+      <pre class="line-numbers"><code id="codeBlock" class="language-javascript"></code></pre>
+    </div>
+  </div>
+
+  <!-- Prism -->
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/toolbar/prism-toolbar.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+
+  <script>
+    // ====== 全局状态 ======
+    let gCode = '';
+    let gLines = [];
+    let gFuse = null;
+    let gSearchResults = [];
+    let gActiveIndex = -1;
+    let gAnalysisVisible = true;
+
+    // ====== URL 解析 ======
+    function parseGitHubUrl(url) {
+      const blobMatch = url.match(/^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/(?:blob|tree)\/([^/]+)\/(.+?)(?:#.*)?$/);
+      if (blobMatch) {
+        const [_, owner, repo, ref, path] = blobMatch;
+        return {
+          raw: `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/${path}`,
+          github: url,
+          lang: path.split('.').pop()?.toLowerCase() || 'plaintext',
+          filename: path.split('/').pop() || 'file'
+        };
+      }
+      const rawMatch = url.match(/^https?:\/\/raw\.githubusercontent\.com\/([^/]+)\/([^/]+)\/([^/]+)\/(.+)$/);
+      if (rawMatch) {
+        const [_, owner, repo, ref, path] = rawMatch;
+        return {
+          raw: url,
+          github: `https://github.com/${owner}/${repo}/blob/${ref}/${path}`,
+          lang: path.split('.').pop()?.toLowerCase() || 'plaintext',
+          filename: path.split('/').pop() || 'file'
+        };
+      }
+      return null;
+    }
+
+    function getUrlParam(name) {
+      return new URLSearchParams(window.location.search).get(name);
+    }
+
+    // ====== 动画工具 ======
+    const Animator = {
+      // 数字滚动动画
+      animateNumber(element, target, duration = 500) {
+        const start = parseInt(element.textContent) || 0;
+        const startTime = performance.now();
+        
+        function update(currentTime) {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const easeProgress = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+          const current = Math.round(start + (target - start) * easeProgress);
+          element.textContent = current.toLocaleString();
+          
+          if (progress < 1) {
+            requestAnimationFrame(update);
+          }
+        }
+        requestAnimationFrame(update);
+      },
+
+      // 高亮闪烁
+      flashHighlight(element) {
+        element.classList.add('search-highlight');
+        setTimeout(() => element.classList.remove('search-highlight'), 1500);
+      },
+
+      // 按钮反馈
+      buttonFeedback(btn, success = true) {
+        const original = btn.textContent;
+        btn.textContent = success ? '✓' : '✕';
+        btn.style.animation = 'successPop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+        setTimeout(() => {
+          btn.textContent = original;
+          btn.style.animation = '';
+        }, 1200);
+      }
+    };
+
+    // ====== 模糊搜索引擎 ======
+    const SearchEngine = {
+      SNIPPET_LENGTH: 60,
+      MAX_RESULTS: 30,
+      MIN_QUERY_LENGTH: 2,
+
+      init(code) {
+        gCode = code;
+        gLines = code.split('\n').map((line, i) => ({ line: i + 1, text: line }));
+        
+        gFuse = new Fuse(gLines, {
+          keys: ['text'],
+          threshold: 0.5,
+          distance: 100,
+          minMatchCharLength: this.MIN_QUERY_LENGTH,
+          includeMatches: true,
+          ignoreLocation: true,
+          findAllMatches: true
+        });
+      },
+
+      search(query) {
+        if (!query || query.length < this.MIN_QUERY_LENGTH) {
+          gSearchResults = [];
+          return [];
+        }
+        const results = gFuse.search(query);
+        gSearchResults = results.slice(0, this.MAX_RESULTS).map(r => ({
+          line: r.item.line, text: r.item.text, score: r.score, matches: r.matches
+        }));
+        return gSearchResults;
+      },
+
+      createSnippet(text, matches) {
+        if (!matches || matches.length === 0) {
+          const end = Math.min(this.SNIPPET_LENGTH, text.length);
+          return { prefix: '', content: this.escapeHtml(text.slice(0, end)), suffix: text.length > end ? '...' : '' };
+        }
+        const firstMatch = matches[0];
+        const matchStart = firstMatch.indices[0][0];
+        const matchEnd = firstMatch.indices[0][1];
+        let start = Math.max(0, matchStart - this.SNIPPET_LENGTH);
+        let end = Math.min(text.length, matchEnd + this.SNIPPET_LENGTH);
+        const prefix = start > 0 ? '...' : '';
+        const suffix = end < text.length ? '...' : '';
+        let content = this.escapeHtml(text.slice(start, end));
+        for (const match of matches) {
+          for (const [mStart, mEnd] of match.indices) {
+            if (mStart >= start && mEnd <= end) {
+              const adjStart = mStart - start;
+              const adjEnd = mEnd - start;
+              content = content.slice(0, adjStart) + `<mark>${content.slice(adjStart, adjEnd + 1)}</mark>` + content.slice(adjEnd + 1);
+            }
+          }
+        }
+        return { prefix, content, suffix };
+      },
+
+      escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      },
+
+      clear() { gSearchResults = []; gActiveIndex = -1; }
+    };
+
+    // ====== 代码分析引擎 ======
+    const CodeAnalyzer = {
+      safeAnalyze(code, lang) {
+        try { return this.analyze(code, lang); }
+        catch (e) { return this.defaultStats(code); }
+      },
+      defaultStats(code) {
+        const lines = code.split('\n').length;
+        const bytes = new Blob([code]).size;
+        return {
+          totalLines: lines, codeLines: lines, emptyLines: 0, commentLines: 0,
+          commentPercent: 0,
+          size: bytes < 1024 ? `${bytes} B` : bytes < 1024*1024 ? `${(bytes/1024).toFixed(1)} KB` : `${(bytes/1024/1024).toFixed(2)} MB`,
+          functions: 0, imports: [],
+          complexity: { score: 0, level: '-', color: '#888' }
+        };
+      },
+      basicStats(code) {
+        const lines = code.split('\n');
+        const totalLines = lines.length;
+        let commentLines = 0, codeLines = 0, emptyLines = 0;
+        let inBlockComment = false;
+        for (let line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) { emptyLines++; continue; }
+          if (inBlockComment) { commentLines++; if (trimmed.includes('*/')) inBlockComment = false; continue; }
+          if (trimmed.startsWith('/*')) { commentLines++; if (!trimmed.includes('*/')) inBlockComment = true; continue; }
+          if (trimmed.startsWith('//') || trimmed.startsWith('#') || trimmed.startsWith('--')) { commentLines++; continue; }
+          codeLines++;
+        }
+        const bytes = new Blob([code]).size;
+        return { totalLines, codeLines, emptyLines, commentLines, commentPercent: totalLines ? Math.round(commentLines / totalLines * 100) : 0, size: bytes < 1024 ? `${bytes} B` : bytes < 1024*1024 ? `${(bytes/1024).toFixed(1)} KB` : `${(bytes/1024/1024).toFixed(2)} MB` };
+      },
+      countFunctions(code, lang) {
+        const patterns = { javascript: [/\bfunction\s+\w+/g, /\b(?:const|let|var)\s+\w+\s*=\s*(?:async\s*)?\(/g], python: [/\bdef\s+\w+/g], java: [/\b(?:public|private|protected|\s)\s*\w+\s+\w+\s*\([^)]*\)\s*\{?/g], go: [/\bfunc\s+(?:\([^)]+\)\s+)?\w+/g] };
+        const regs = patterns[lang] || patterns.javascript;
+        let count = 0;
+        for (const re of regs) { try { const matches = code.match(re); if (matches) count += matches.length; } catch {} }
+        return Math.min(count, Math.round(count * 0.85)) || 0;
+      },
+      extractImports(code, lang) {
+        const deps = new Set();
+        const patterns = { javascript: [/(?:import|from)\s+['"]([^'"]+)['"]/g, /require\s*\(\s*['"]([^'"]+)['"]\s*\)/g], python: [/^\s*import\s+(\w+)/gm, /^\s*from\s+(\w+)(?:\.\w+)*\s+import/gm] };
+        const regs = patterns[lang] || patterns.javascript;
+        for (const re of regs) { try { let m; while ((m = re.exec(code)) !== null) { if (m[1] && m[1].trim() && !m[1].startsWith('.')) deps.add(m[1].trim().split(/[\/\s]/)[0]); } } catch {} }
+        return Array.from(deps).slice(0, 25);
+      },
+      estimateComplexity(code) {
+        const keywords = ['if', 'else', 'for', 'while', 'switch', 'case', 'catch', '&&', '||'];
+        let score = 1;
+        for (const kw of keywords) { try { const regex = new RegExp(`\\b${kw}\\b`, 'g'); const matches = code.match(regex); if (matches) score += matches.length * 0.5; } catch {} }
+        let maxDepth = 0, depth = 0;
+        for (const ch of code) { if (ch === '{' || ch === '(') { depth++; maxDepth = Math.max(maxDepth, depth); } else if (ch === '}' || ch === ')') depth = Math.max(0, depth - 1); }
+        score += maxDepth * 0.7;
+        const level = score < 10 ? '低' : score < 25 ? '中' : score < 50 ? '高' : '极高';
+        const color = score < 10 ? '#4ec9b0' : score < 25 ? '#dcdcaa' : score < 50 ? '#ce9178' : '#f48771';
+        return { score: Math.round(score), level, color };
+      },
+      analyze(code, lang) { const basic = this.basicStats(code); return { ...basic, functions: this.countFunctions(code, lang), imports: this.extractImports(code, lang), complexity: this.estimateComplexity(code) }; }
+    };
+
+    // ====== UI 渲染 ======
+    function renderAnalysis(data) {
+      Animator.animateNumber(document.getElementById('statLines'), data.totalLines || 0);
+      document.getElementById('statSize').textContent = data.size || '-';
+      Animator.animateNumber(document.getElementById('statComments'), data.commentPercent || 0);
+      document.getElementById('commentPercent').textContent = `注释 ${data.commentLines || 0} 行`;
+      Animator.animateNumber(document.getElementById('statFunctions'), data.functions || 0);
+      const cx = data.complexity || {};
+      Animator.animateNumber(document.getElementById('statComplexity'), cx.score || 0);
+      const levelEl = document.getElementById('complexityLevel');
+      levelEl.textContent = cx.level || '-';
+      levelEl.style.color = cx.color || '#888';
+      Animator.animateNumber(document.getElementById('statImports'), (data.imports?.length || 0));
+      const depsList = document.getElementById('depsList');
+      const depsCount = document.getElementById('depsCount');
+      depsList.innerHTML = '';
+      if (data.imports?.length > 0) {
+        depsCount.textContent = `(${data.imports.length})`;
+        data.imports.forEach((dep, i) => {
+          const tag = document.createElement('span');
+          tag.className = `dep-tag ${dep.includes('/') || dep.startsWith('@') ? 'external' : ''}`;
+          tag.textContent = dep;
+          tag.style.animation = `fadeIn 0.3s ease ${i * 0.05}s both`;
+          tag.onclick = () => { const pkg = dep.replace('@', '').split('/')[0]; window.open(`https://www.npmjs.com/package/${pkg}`, '_blank'); };
+          depsList.appendChild(tag);
+        });
+      } else { depsCount.textContent = '(0)'; depsList.innerHTML = '<span class="dep-empty">未检测到外部依赖</span>'; }
+    }
+
+    function renderSearchResults(results) {
+      const container = document.getElementById('searchResults');
+      const infoEl = document.getElementById('searchInfo');
+      if (results.length === 0) {
+        container.innerHTML = '<div class="search-empty">未找到匹配结果</div>';
+        container.classList.add('show');
+        container.classList.remove('hide');
+        infoEl.innerHTML = '';
+        gActiveIndex = -1;
+        return;
+      }
+      infoEl.innerHTML = `<span class="match">${results.length}</span> 个匹配`;
+      container.innerHTML = results.map((r, i) => {
+        const snippet = SearchEngine.createSnippet(r.text, r.matches);
+        const scorePercent = Math.round((1 - r.score) * 100);
+        return `<div class="search-item ${i === gActiveIndex ? 'active' : ''}" data-index="${i}" data-line="${r.line}"><div class="line-header"><span class="line-num">L${r.line}</span><span class="line-score">匹配度 ${scorePercent}%</span></div><div class="line-snippet"><span class="ellipsis">${snippet.prefix}</span>${snippet.content}<span class="ellipsis">${snippet.suffix}</span></div></div>`;
+      }).join('');
+      container.classList.add('show');
+      container.classList.remove('hide');
+      gActiveIndex = 0;
+      updateActiveItem();
+    }
+
+    function updateActiveItem() {
+      const items = document.querySelectorAll('.search-item');
+      items.forEach((item, i) => item.classList.toggle('active', i === gActiveIndex));
+      if (items[gActiveIndex]) items[gActiveIndex].scrollIntoView({ block: 'nearest' });
+    }
+
+    function jumpToLine(lineNum) {
+      const pre = document.querySelector('pre');
+      const lineEl = pre.querySelector(`span[data-line="${lineNum}"]`);
+      if (lineEl) {
+        pre.querySelectorAll('.search-highlight').forEach(el => el.classList.remove('search-highlight'));
+        const lineWrapper = lineEl.closest('div') || lineEl.parentElement;
+        if (lineWrapper) {
+          Animator.flashHighlight(lineWrapper);
+          lineWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } else {
+        const lineHeight = 20;
+        pre.scrollTo({ top: (lineNum - 1) * lineHeight, behavior: 'smooth' });
+      }
+    }
+
+    // ====== 主逻辑 ======
+    async function loadCode() {
+      const url = getUrlParam('url');
+      const errorEl = document.getElementById('errorMsg');
+      const loading = document.getElementById('loading');
+      const codeBlock = document.getElementById('codeBlock');
+      const codeWrapper = document.getElementById('codeWrapper');
+      const fileInfo = document.getElementById('fileInfo');
+      const openBtn = document.getElementById('openGithub');
+      const copyAllBtn = document.getElementById('copyAll');
+      const toggleBtn = document.getElementById('toggleAnalysis');
+      const analysisPanel = document.getElementById('analysisPanel');
+      const searchInput = document.getElementById('searchInput');
+      const searchBtn = document.getElementById('searchBtn');
+      const searchClear = document.getElementById('searchClear');
+      const searchResults = document.getElementById('searchResults');
+
+      if (!url) { errorEl.textContent = '❌ 缺少 url 参数'; errorEl.classList.add('show'); loading.classList.remove('show'); return; }
+      const info = parseGitHubUrl(url);
+      if (!info) { errorEl.textContent = '❌ 不支持的链接格式'; errorEl.classList.add('show'); loading.classList.remove('show'); return; }
+
+      fileInfo.innerHTML = `📄 <a href="${info.github}" target="_blank">${info.filename}</a>`;
+      openBtn.onclick = () => window.open(info.github, '_blank');
+      openBtn.disabled = false;
+      toggleBtn.disabled = false;
+      
+      loading.classList.add('show');
+      codeWrapper.classList.remove('show');
+      analysisPanel.style.display = 'block';
+
+      try {
+        const res = await fetch(info.raw, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const code = await res.text();
+
+        codeBlock.textContent = code;
+        codeBlock.className = `language-${info.lang}`;
+        document.getElementById('codeLang').textContent = info.lang.toUpperCase();
+        Prism.highlightElement(codeBlock);
+        if (Prism.plugins.lineNumbers) Prism.plugins.lineNumbers.resize(codeBlock.parentElement);
+
+        const analysis = CodeAnalyzer.safeAnalyze(code, info.lang);
+        renderAnalysis(analysis);
+
+        SearchEngine.init(code);
+        searchInput.disabled = false;
+        searchBtn.disabled = false;
+        searchClear.disabled = false;
+
+        // 代码区域显示动画
+        setTimeout(() => codeWrapper.classList.add('show'), 100);
+        copyAllBtn.disabled = false;
+
+        copyAllBtn.onclick = async () => {
+          try {
+            await navigator.clipboard.writeText(code);
+            Animator.buttonFeedback(copyAllBtn, true);
+          } catch { Animator.buttonFeedback(copyAllBtn, false); }
+        };
+
+        toggleBtn.onclick = () => {
+          gAnalysisVisible = !gAnalysisVisible;
+          if (!gAnalysisVisible) {
+            analysisPanel.querySelector('.analysis').classList.add('collapsing');
+            setTimeout(() => { analysisPanel.style.display = 'none'; }, 250);
+          } else {
+            analysisPanel.style.display = 'block';
+            setTimeout(() => analysisPanel.querySelector('.analysis').classList.remove('collapsing'), 10);
+          }
+          toggleBtn.textContent = gAnalysisVisible ? '🔽 隐藏分析' : '📊 显示分析';
+        };
+
+        const doSearch = () => {
+          const query = searchInput.value.trim();
+          if (query.length < SearchEngine.MIN_QUERY_LENGTH) {
+            SearchEngine.clear();
+            searchResults.classList.remove('show');
+            searchResults.classList.add('hide');
+            document.getElementById('searchInfo').innerHTML = '';
+            return;
+          }
+          const results = SearchEngine.search(query);
+          renderSearchResults(results);
+        };
+
+        searchBtn.onclick = doSearch;
+        searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); doSearch(); } });
+
+        searchClear.onclick = () => {
+          searchInput.value = '';
+          SearchEngine.clear();
+          searchResults.classList.remove('show');
+          searchResults.classList.add('hide');
+          document.getElementById('searchInfo').innerHTML = '';
+          document.querySelector('pre')?.querySelectorAll('.search-highlight').forEach(el => el.classList.remove('search-highlight'));
+          searchInput.focus();
+        };
+
+        searchInput.addEventListener('keydown', (e) => {
+          if (gSearchResults.length === 0) return;
+          if (e.key === 'ArrowDown') { e.preventDefault(); gActiveIndex = Math.min(gActiveIndex + 1, gSearchResults.length - 1); updateActiveItem(); }
+          else if (e.key === 'ArrowUp') { e.preventDefault(); gActiveIndex = Math.max(gActiveIndex - 1, 0); updateActiveItem(); }
+          else if (e.key === 'Enter' && searchResults.classList.contains('show')) { e.preventDefault(); if (gActiveIndex >= 0 && gSearchResults[gActiveIndex]) { jumpToLine(gSearchResults[gActiveIndex].line); searchResults.classList.remove('show'); } }
+          else if (e.key === 'Escape') { searchResults.classList.remove('show'); searchInput.blur(); }
+        });
+
+        searchResults.addEventListener('click', (e) => { const item = e.target.closest('.search-item'); if (item) { jumpToLine(parseInt(item.dataset.line)); searchResults.classList.remove('show'); } });
+
+      } catch (e) {
+        errorEl.textContent = `❌ 加载失败：${e.message}`;
+        errorEl.classList.add('show');
+        renderAnalysis(CodeAnalyzer.defaultStats(''));
+      } finally {
+        setTimeout(() => loading.classList.remove('show'), 300);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadCode);
+  </script>
+</body>
+</html>
